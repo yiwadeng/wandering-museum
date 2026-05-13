@@ -1,27 +1,34 @@
 'use client';
 
-import { Canvas, useFrame } from "@react-three/fiber";
-import { useRef } from "react";
-import type { Mesh } from "three";
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Center, Html, OrbitControls, useGLTF } from '@react-three/drei';
+import { Suspense, useRef } from 'react';
+import type { Group } from 'three';
 
-const ZINC_900 = "#18181b";
+const ZINC_900 = '#18181b';
 
-function RotatingCube() {
-  const meshRef = useRef<Mesh>(null);
+const MODEL_URL = '/models/watermoon_test.glb';
+
+function WatermoonModel({ scale = 1 }: { scale?: number }) {
+  const { scene } = useGLTF(MODEL_URL);
+  const groupRef = useRef<Group>(null);
 
   useFrame((_state, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.35;
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * 0.25;
     }
   });
 
   return (
-    <mesh ref={meshRef}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="#ffffff" />
-    </mesh>
+    <group ref={groupRef}>
+      <Center>
+        <primitive object={scene} scale={scale} />
+      </Center>
+    </group>
   );
 }
+
+useGLTF.preload(MODEL_URL);
 
 export default function Home() {
   return (
@@ -30,7 +37,16 @@ export default function Home() {
         <color attach="background" args={[ZINC_900]} />
         <ambientLight intensity={0.35} />
         <directionalLight position={[4, 6, 4]} intensity={1.25} />
-        <RotatingCube />
+        <Suspense
+          fallback={
+            <Html center>
+              <p className="select-none text-sm text-zinc-400">加载中…</p>
+            </Html>
+          }
+        >
+          <WatermoonModel scale={1} />
+        </Suspense>
+        <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
       </Canvas>
     </div>
   );
