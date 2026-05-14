@@ -12,7 +12,7 @@ import {
 import { Suspense, useEffect, useRef, type ComponentProps } from 'react';
 import type { Group } from 'three';
 
-import { ScrollDebugger } from '@/components/ScrollDebugger';
+import { ScrollDebuggerPanel, ScrollDebuggerSync } from '@/components/ScrollDebugger';
 import { TOTAL_SCREENS } from '@/lib/screens';
 
 /** Slightly lifted from pure black so the scene reads brighter around the model */
@@ -84,12 +84,17 @@ export default function ArtifactViewer({
   rotationSpeed = 0.25,
   cameraLimits = DEFAULT_CAMERA_LIMITS,
 }: ArtifactViewerProps) {
+  const scrollDbgLine1Ref = useRef<HTMLDivElement>(null);
+  const scrollDbgLine2Ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     void useGLTF.preload(modelUrl);
   }, [modelUrl]);
 
   return (
-    <Canvas
+    <>
+      <ScrollDebuggerPanel line1Ref={scrollDbgLine1Ref} line2Ref={scrollDbgLine2Ref} />
+      <Canvas
       className="h-full w-full"
       camera={{ position: [2.8, 1.8, 2.8], fov: 45 }}
       gl={{ toneMappingExposure: 1.15 }}
@@ -115,7 +120,7 @@ export default function ArtifactViewer({
           />
           <Environment preset={hdriPreset as NonNullable<ComponentProps<typeof Environment>['preset']>} />
         </Suspense>
-        <ScrollDebugger />
+        <ScrollDebuggerSync line1Ref={scrollDbgLine1Ref} line2Ref={scrollDbgLine2Ref} />
         <OrbitControls
           // 水平旋转范围：左右各 75°，防止用户拖到背面破洞
           minAzimuthAngle={cameraLimits.azimuth.min}
@@ -132,5 +137,6 @@ export default function ArtifactViewer({
         />
       </ScrollControls>
     </Canvas>
+    </>
   );
 }
