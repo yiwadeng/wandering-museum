@@ -1,11 +1,12 @@
 'use client';
 
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Center, Html, OrbitControls, useGLTF } from '@react-three/drei';
+import { Center, Environment, Html, OrbitControls, useGLTF } from '@react-three/drei';
 import { Suspense, useRef } from 'react';
 import type { Group } from 'three';
 
-const ZINC_900 = '#18181b';
+/** Slightly lifted from pure black so the scene reads brighter around the model */
+const SCENE_BG = '#27272a';
 
 const MODEL_URL = '/models/watermoon_test.glb';
 
@@ -33,10 +34,15 @@ useGLTF.preload(MODEL_URL);
 export default function Home() {
   return (
     <div className="fixed inset-0 h-screen w-screen">
-      <Canvas className="h-full w-full" camera={{ position: [2.8, 1.8, 2.8], fov: 45 }}>
-        <color attach="background" args={[ZINC_900]} />
-        <ambientLight intensity={0.35} />
-        <directionalLight position={[4, 6, 4]} intensity={1.25} />
+      <Canvas
+        className="h-full w-full"
+        camera={{ position: [2.8, 1.8, 2.8], fov: 45 }}
+        gl={{ toneMappingExposure: 1.15 }}
+      >
+        <color attach="background" args={[SCENE_BG]} />
+        <ambientLight intensity={0.55} />
+        <hemisphereLight args={['#f4f4f5', '#3f3f46', 0.45]} />
+        <directionalLight position={[4, 8, 5]} intensity={1.6} />
         <Suspense
           fallback={
             <Html center>
@@ -45,6 +51,7 @@ export default function Home() {
           }
         >
           <WatermoonModel scale={1} />
+          <Environment preset="studio" />
         </Suspense>
         <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
       </Canvas>
