@@ -10,18 +10,18 @@ const SCENE_BG = '#27272a';
 
 const MODEL_URL = '/models/watermoon_test.glb';
 
-function WatermoonModel({ scale = 1 }: { scale?: number }) {
+function WatermoonModel({ scale = 0.2 }: { scale?: number }) {
   const { scene } = useGLTF(MODEL_URL);
   const groupRef = useRef<Group>(null);
 
-  useFrame((_state, delta) => {
+  useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.25;
+      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 1.5) * 0.05;
     }
   });
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} rotation={[0.55, 0.05, -0.35]}>
       <Center>
         <primitive object={scene} scale={scale} />
       </Center>
@@ -50,10 +50,25 @@ export default function Home() {
             </Html>
           }
         >
-          <WatermoonModel scale={1} />
-          <Environment preset="studio" />
+          <WatermoonModel scale={0.2} />
+          <Environment preset="sunset" />
         </Suspense>
-        <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
+        <OrbitControls
+          // 水平旋转范围：左右各 75°，防止用户拖到背面破洞
+          minAzimuthAngle={-Math.PI / 2.4}
+          maxAzimuthAngle={Math.PI / 2.4}
+
+          // 垂直角度范围：不让从正上方俯视、不让从正下方仰视
+          minPolarAngle={Math.PI / 4} // 最多斜上方俯视，看不到模型头顶
+          maxPolarAngle={Math.PI / 1.8} // 略低于水平，看不到底座下方
+
+          // 关掉平移，避免用户拖飞整个画面
+          enablePan={false}
+
+          // 顺滑阻尼，拖完有惯性滑行，不戛然而止
+          enableDamping
+          dampingFactor={0.05}
+        />
       </Canvas>
     </div>
   );
