@@ -1,9 +1,19 @@
 'use client';
 
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Center, Environment, Html, OrbitControls, useGLTF } from '@react-three/drei';
+import {
+  Center,
+  Environment,
+  Html,
+  OrbitControls,
+  ScrollControls,
+  useGLTF,
+} from '@react-three/drei';
 import { Suspense, useEffect, useRef, type ComponentProps } from 'react';
 import type { Group } from 'three';
+
+import { ScrollDebugger } from '@/components/ScrollDebugger';
+import { TOTAL_SCREENS } from '@/lib/screens';
 
 /** Slightly lifted from pure black so the scene reads brighter around the model */
 const SCENE_BG = '#27272a';
@@ -84,39 +94,43 @@ export default function ArtifactViewer({
       camera={{ position: [2.8, 1.8, 2.8], fov: 45 }}
       gl={{ toneMappingExposure: 1.15 }}
     >
-      <color attach="background" args={[SCENE_BG]} />
-      <ambientLight intensity={0.55} />
-      <hemisphereLight args={['#f4f4f5', '#3f3f46', 0.45]} />
-      <directionalLight position={[4, 8, 5]} intensity={1.6} />
-      <Suspense
-        fallback={
-          <Html center>
-            <p className="select-none text-sm text-zinc-400">加载中…</p>
-          </Html>
-        }
-      >
-        <ArtifactModel
-          modelUrl={modelUrl}
-          scale={scale}
-          rotation={rotation}
-          animation={animation}
-          rotationSpeed={rotationSpeed}
+      <ScrollControls pages={TOTAL_SCREENS} damping={0.25}>
+        <color attach="background" args={[SCENE_BG]} />
+        <ambientLight intensity={0.55} />
+        <hemisphereLight args={['#f4f4f5', '#3f3f46', 0.45]} />
+        <directionalLight position={[4, 8, 5]} intensity={1.6} />
+        <Suspense
+          fallback={
+            <Html center>
+              <p className="select-none text-sm text-zinc-400">加载中…</p>
+            </Html>
+          }
+        >
+          <ArtifactModel
+            modelUrl={modelUrl}
+            scale={scale}
+            rotation={rotation}
+            animation={animation}
+            rotationSpeed={rotationSpeed}
+          />
+          <Environment preset={hdriPreset as NonNullable<ComponentProps<typeof Environment>['preset']>} />
+        </Suspense>
+        <ScrollDebugger />
+        <OrbitControls
+          // 水平旋转范围：左右各 75°，防止用户拖到背面破洞
+          minAzimuthAngle={cameraLimits.azimuth.min}
+          maxAzimuthAngle={cameraLimits.azimuth.max}
+          // 垂直角度范围：不让从正上方俯视、不让从正下方仰视
+          minPolarAngle={cameraLimits.polar.min} // 最多斜上方俯视，看不到模型头顶
+          maxPolarAngle={cameraLimits.polar.max} // 略低于水平，看不到底座下方
+          // 关掉平移，避免用户拖飞整个画面
+          enablePan={false}
+          enableZoom={false}
+          // 顺滑阻尼，拖完有惯性滑行，不戛然而止
+          enableDamping
+          dampingFactor={0.05}
         />
-        <Environment preset={hdriPreset as NonNullable<ComponentProps<typeof Environment>['preset']>} />
-      </Suspense>
-      <OrbitControls
-        // 水平旋转范围：左右各 75°，防止用户拖到背面破洞
-        minAzimuthAngle={cameraLimits.azimuth.min}
-        maxAzimuthAngle={cameraLimits.azimuth.max}
-        // 垂直角度范围：不让从正上方俯视、不让从正下方仰视
-        minPolarAngle={cameraLimits.polar.min} // 最多斜上方俯视，看不到模型头顶
-        maxPolarAngle={cameraLimits.polar.max} // 略低于水平，看不到底座下方
-        // 关掉平移，避免用户拖飞整个画面
-        enablePan={false}
-        // 顺滑阻尼，拖完有惯性滑行，不戛然而止
-        enableDamping
-        dampingFactor={0.05}
-      />
+      </ScrollControls>
     </Canvas>
   );
 }
