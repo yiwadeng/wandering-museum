@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import ArtifactViewer from '@/components/ArtifactViewer';
 import { Model3DViewer } from '@/components/Model3DViewer';
+import { NIGHT_BASE } from '@/lib/introScroll';
 
 const MODEL_URL = '/models/watermoon_test.glb';
 const MODEL_ROTATION: [number, number, number] = [0.55, 0.05, -0.35];
@@ -13,7 +14,7 @@ export default function Home() {
   const closeInspect = useCallback(() => setInspectMode(false), []);
 
   return (
-    <div className="fixed inset-0 h-screen w-screen">
+    <div className="fixed inset-0 h-screen w-screen" style={{ background: NIGHT_BASE }}>
       <ArtifactViewer
         modelUrl={MODEL_URL}
         scale={0.2}

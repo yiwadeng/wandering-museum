@@ -3,47 +3,148 @@
 import { useScroll } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, type CSSProperties } from 'react';
-import { SCREENS, TOTAL_SCREENS, type ScreenText } from '@/lib/screens';
+import { SCREENS, TOTAL_SCREENS, type Screen, type ScreenText } from '@/lib/screens';
 
 /** 叙事:文字在 Canvas 上。查看3D:文字 < 遮罩(500) < Canvas(800) < ✕(1200) */
 const Z_TEXT_NARRATIVE = 1000;
 const Z_TEXT_INSPECT = 200;
 
-function placementStyle(placement: ScreenText['placement'], inspectMode: boolean): CSSProperties {
+const TEXT_COLOR = '#faf9f6';
+
+/** 字号阶梯(rem):正文 1 → 信息/小字 ~0.85 → 题记/诗句 ~1.3 → 标题 ~2.25 */
+const TYPE = {
+  body: { fontSize: '1rem', lineHeight: 1.65, fontWeight: 400 },
+  meta: { fontSize: '0.85rem', lineHeight: 1.45, fontWeight: 400 },
+  lead: { fontSize: '1.3rem', lineHeight: 1.5, fontWeight: 400 },
+  title: { fontSize: '2.25rem', lineHeight: 1.2, fontWeight: 600 },
+} as const;
+
+/** 屏 3 基础字号 ×2(等价于此前整体 scale 2.0),transform scale 保持 1 */
+const TYPE_AT_EASE = {
+  body: { fontSize: '2rem', lineHeight: 1.65, fontWeight: 400 },
+  meta: { fontSize: '1.7rem', lineHeight: 1.45, fontWeight: 400 },
+  lead: { fontSize: '2.6rem', lineHeight: 1.5, fontWeight: 400 },
+  title: { fontSize: '4.5rem', lineHeight: 1.2, fontWeight: 600 },
+} as const;
+
+type TextLayout = { offsetX: number; offsetY: number; scale: number };
+
+const TEXT_LAYOUT: Record<string, TextLayout> = {
+  intro: { offsetX: -400, offsetY: -30, scale: 0.85 },
+  'dongfang-guanyin': { offsetX: -400, offsetY: -210, scale: 1.05 },
+  'at-ease': { offsetX: 400, offsetY: 30, scale: 1 },
+};
+
+const DEFAULT_TEXT_LAYOUT: TextLayout = { offsetX: 0, offsetY: 0, scale: 1 };
+
+function placementStyle(
+  placement: ScreenText['placement'],
+  inspectMode: boolean,
+  layout: TextLayout,
+): CSSProperties {
+  const { offsetX, offsetY, scale } = layout;
   const base: CSSProperties = {
     position: 'fixed',
-    padding: '12px 16px',
-    color: '#ffffff',
-    fontSize: 16,
-    lineHeight: 1.5,
+    padding: '0.75rem 1rem',
+    color: TEXT_COLOR,
     pointerEvents: 'none',
     zIndex: inspectMode ? Z_TEXT_INSPECT : Z_TEXT_NARRATIVE,
   };
   if (placement === 'below-model') {
     return {
       ...base,
-      bottom: 24,
+      bottom: '1.5rem',
       left: '50%',
-      transform: 'translateX(-50%)',
+      transform: `translate(calc(-50% + ${offsetX}px), ${offsetY}px) scale(${scale})`,
+      transformOrigin: '50% 100%',
       maxWidth: 'min(92vw, 40rem)',
     };
   }
   if (placement === 'model-right') {
     return {
       ...base,
-      right: 16,
+      right: '1rem',
       top: '50%',
-      transform: 'translateY(-50%)',
+      transform: `translate(${offsetX}px, calc(-50% + ${offsetY}px)) scale(${scale})`,
+      transformOrigin: '100% 50%',
       maxWidth: 'min(42vw, 22rem)',
     };
   }
   return {
     ...base,
-    left: 16,
+    left: '1rem',
     top: '50%',
-    transform: 'translateY(-50%)',
+    transform: `translate(${offsetX}px, calc(-50% + ${offsetY}px)) scale(${scale})`,
+    transformOrigin: '0% 50%',
     maxWidth: 'min(42vw, 22rem)',
   };
+}
+
+function IntroTextBlock({ text }: { text: ScreenText }) {
+  return (
+    <>
+      <h1 style={{ ...TYPE.title, margin: '0 0 0.75rem' }}>{text.title}</h1>
+      {text.lines?.map((line, i) => (
+        <p key={i} style={{ ...TYPE.meta, margin: '0 0 0.25rem' }}>
+          {line}
+        </p>
+      ))}
+      {text.body ? (
+        <p style={{ ...TYPE.body, margin: '0.75rem 0 0' }}>{text.body}</p>
+      ) : null}
+      {text.carouselPlaceholder ? (
+        <p style={{ ...TYPE.meta, marginTop: '1.5rem', opacity: 0.7 }}>{text.carouselPlaceholder}</p>
+      ) : null}
+    </>
+  );
+}
+
+function DongfangTextBlock({ text }: { text: ScreenText }) {
+  return (
+    <>
+      <h1 style={{ ...TYPE.title, margin: '0 0 0.75rem' }}>{text.title}</h1>
+      {text.body ? <p style={{ ...TYPE.body, margin: 0 }}>{text.body}</p> : null}
+      {text.smallPrint ? (
+        <p style={{ ...TYPE.lead, margin: '1.25rem 0 0' }}>{text.smallPrint}</p>
+      ) : null}
+      {text.carouselPlaceholder ? (
+        <p style={{ ...TYPE.meta, marginTop: '1.5rem', opacity: 0.7 }}>{text.carouselPlaceholder}</p>
+      ) : null}
+    </>
+  );
+}
+
+function AtEaseTextBlock({ text }: { text: ScreenText }) {
+  return (
+    <>
+      <h1 style={{ ...TYPE_AT_EASE.title, margin: '0 0 0.5rem' }}>{text.title}</h1>
+      {text.subtitle ? (
+        <p style={{ ...TYPE_AT_EASE.lead, margin: '0 0 0.75rem' }}>{text.subtitle}</p>
+      ) : null}
+      {text.body ? <p style={{ ...TYPE_AT_EASE.body, margin: 0 }}>{text.body}</p> : null}
+    </>
+  );
+}
+
+function ScreenTextContent({ screen }: { screen: Screen }) {
+  const text = screen.text;
+  if (!text) return null;
+  if (screen.id === 'intro') return <IntroTextBlock text={text} />;
+  if (screen.id === 'dongfang-guanyin') return <DongfangTextBlock text={text} />;
+  if (screen.id === 'at-ease') return <AtEaseTextBlock text={text} />;
+  return (
+    <>
+      <h1 style={{ ...TYPE.title, margin: '0 0 0.75rem' }}>{text.title}</h1>
+      {text.subtitle ? <p style={{ ...TYPE.lead, margin: '0 0 0.75rem' }}>{text.subtitle}</p> : null}
+      {text.lines?.map((line, i) => (
+        <p key={i} style={{ ...TYPE.body, marginBottom: '0.5rem' }}>
+          {line}
+        </p>
+      ))}
+      {text.body ? <p style={{ ...TYPE.body, margin: 0 }}>{text.body}</p> : null}
+      {text.smallPrint ? <p style={{ ...TYPE.lead, marginTop: '1rem' }}>{text.smallPrint}</p> : null}
+    </>
+  );
 }
 
 /** 在 ScrollControls 内使用；根据滚动段更新当前屏索引(与模型插值的 i0 一致) */
@@ -71,27 +172,17 @@ export function ScreenTextLayer({
   inspectMode = false,
 }: {
   activeScreenIndex: number;
-  /** 仅用于叠放:查看3D 时把文字压到遮罩下面 */
   inspectMode?: boolean;
 }) {
   const screen = SCREENS[activeScreenIndex];
   const text = screen?.text;
-  if (!text) return null;
+  if (!text || !screen) return null;
+
+  const layout = TEXT_LAYOUT[screen.id] ?? DEFAULT_TEXT_LAYOUT;
 
   return (
-    <div style={placementStyle(text.placement, inspectMode)}>
-      <div style={{ marginBottom: 8 }}>{text.title}</div>
-      {text.subtitle ? <div style={{ marginBottom: 8 }}>{text.subtitle}</div> : null}
-      {text.lines?.map((line, i) => (
-        <div key={i} style={{ marginBottom: 8 }}>
-          {line}
-        </div>
-      ))}
-      {text.body ? <div style={{ marginBottom: text.smallPrint ? 8 : 0 }}>{text.body}</div> : null}
-      {text.smallPrint ? <div style={{ fontSize: 14 }}>{text.smallPrint}</div> : null}
-      {text.carouselPlaceholder ? (
-        <div style={{ marginTop: 24 }}>{text.carouselPlaceholder}</div>
-      ) : null}
+    <div style={placementStyle(text.placement, inspectMode, layout)}>
+      <ScreenTextContent screen={screen} />
     </div>
   );
 }

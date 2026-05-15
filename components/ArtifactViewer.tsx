@@ -1,6 +1,6 @@
 'use client';
 
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {
   Center,
   Environment,
@@ -10,16 +10,60 @@ import {
   useGLTF,
   useScroll,
 } from '@react-three/drei';
-import { Suspense, useCallback, useEffect, useRef, useState, type ComponentProps } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import * as THREE from 'three';
 import type { Group } from 'three';
 
+import { IntroFadeSync, IntroMoonLayer } from '@/components/IntroMoonLayer';
 import { ScrollDebuggerPanel, ScrollDebuggerSync } from '@/components/ScrollDebugger';
 import { ScreenTextLayer, ScrollTextActiveSync } from '@/components/ScreenTextLayer';
+import { getIntroScreenFade } from '@/lib/introScroll';
 import { getScreenLayout, SCREENS, TOTAL_SCREENS } from '@/lib/screens';
 
-/** Slightly lifted from pure black so the scene reads brighter around the model */
-const SCENE_BG = '#27272a';
+const INTRO_SKY_MID = '#0a1428';
+const INTRO_SKY_EDGE = '#020508';
+
+/** 全页夜色底:柔和径向,屏 2/3 与屏 1 过渡终点一致 */
+function createNightBaseTexture() {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const cx = size * 0.5;
+  const cy = size * 0.45;
+  const r = size * 0.85;
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, INTRO_SKY_MID);
+  g.addColorStop(0.55, '#081220');
+  g.addColorStop(1, INTRO_SKY_EDGE);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/** 屏 2/3:Canvas 铺夜色底;屏 1 时背景透明,让下层 2D 月亮/径向光透出 */
+function IntroSkyBackdrop({ inspectMode }: { inspectMode: boolean }) {
+  const scroll = useScroll();
+  const scene = useThree((s) => s.scene);
+  const nightBaseTexture = useMemo(
+    () => (typeof document !== 'undefined' ? createNightBaseTexture() : null),
+    [],
+  );
+
+  useFrame(() => {
+    const fade = getIntroScreenFade(scroll.offset, inspectMode);
+    if (fade > 0.02) {
+      scene.background = null;
+    } else if (nightBaseTexture) {
+      scene.background = nightBaseTexture;
+    }
+  });
+
+  return null;
+}
 
 export type ArtifactViewerAnimation = 'breathe' | 'rotate' | 'static';
 
@@ -141,8 +185,12 @@ export default function ArtifactViewer({
   const scrollDbgLine1Ref = useRef<HTMLDivElement>(null);
   const scrollDbgLine2Ref = useRef<HTMLDivElement>(null);
   const [activeTextScreen, setActiveTextScreen] = useState(0);
+  const [introFade, setIntroFade] = useState(1);
   const onActiveTextScreen = useCallback((i: number) => {
     setActiveTextScreen(i);
+  }, []);
+  const onIntroFade = useCallback((fade: number) => {
+    setIntroFade(fade);
   }, []);
 
   useEffect(() => {
@@ -152,6 +200,7 @@ export default function ArtifactViewer({
   return (
     <>
       <ScrollDebuggerPanel line1Ref={scrollDbgLine1Ref} line2Ref={scrollDbgLine2Ref} />
+      <IntroMoonLayer fade={introFade} inspectMode={inspectMode} />
       <ScreenTextLayer activeScreenIndex={activeTextScreen} inspectMode={inspectMode} />
       {/* 叙事 z=100 低于文字 1000；查看3D z=800 高于遮罩 500、低于 ✕ 1200 */}
       <div
@@ -161,10 +210,11 @@ export default function ArtifactViewer({
         <Canvas
           className="h-full w-full"
           camera={{ position: [2.8, 1.8, 2.8], fov: 45 }}
-          gl={{ toneMappingExposure: 1.15 }}
+          gl={{ alpha: true, toneMappingExposure: 1.15 }}
         >
         <ScrollControls pages={TOTAL_SCREENS} damping={0.25}>
-          <color attach="background" args={[SCENE_BG]} />
+          <IntroSkyBackdrop inspectMode={inspectMode} />
+          <IntroFadeSync onFade={onIntroFade} />
           <ambientLight intensity={0.55} />
           <hemisphereLight args={['#f4f4f5', '#3f3f46', 0.45]} />
           <directionalLight position={[4, 8, 5]} intensity={1.6} />
