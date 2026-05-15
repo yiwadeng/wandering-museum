@@ -106,7 +106,15 @@ export const SCREENS: Screen[] = [
 
 export const TOTAL_SCREENS = SCREENS.length;
 
-/** 当前阶段叙事布局只用 desktop；mobile 占位与 desktop 相同 */
-export function getScreenLayout(screen: Screen): ScreenModelState {
-  return screen.desktop;
+/** 当前阶段叙事布局只用 desktop；mobile 占位与 desktop 相同。screen 无效时回退第一屏,避免越界崩溃。 */
+export function getScreenLayout(screen: Screen | undefined): ScreenModelState {
+  if (screen?.desktop) return screen.desktop;
+  const first = SCREENS[0];
+  if (first?.desktop) return first.desktop;
+  return {
+    position: [0, 0, 0],
+    scale: 0.2,
+    rotation: [0, 0, 0],
+    modelVisible: true,
+  };
 }

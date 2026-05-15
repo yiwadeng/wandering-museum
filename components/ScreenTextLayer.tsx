@@ -5,7 +5,11 @@ import { useFrame } from '@react-three/fiber';
 import { useRef, type CSSProperties } from 'react';
 import { SCREENS, TOTAL_SCREENS, type ScreenText } from '@/lib/screens';
 
-function placementStyle(placement: ScreenText['placement']): CSSProperties {
+/** 叙事:文字在 Canvas 上。查看3D:文字 < 遮罩(500) < Canvas(800) < ✕(1200) */
+const Z_TEXT_NARRATIVE = 1000;
+const Z_TEXT_INSPECT = 200;
+
+function placementStyle(placement: ScreenText['placement'], inspectMode: boolean): CSSProperties {
   const base: CSSProperties = {
     position: 'fixed',
     padding: '12px 16px',
@@ -13,7 +17,7 @@ function placementStyle(placement: ScreenText['placement']): CSSProperties {
     fontSize: 16,
     lineHeight: 1.5,
     pointerEvents: 'none',
-    zIndex: 1000,
+    zIndex: inspectMode ? Z_TEXT_INSPECT : Z_TEXT_NARRATIVE,
   };
   if (placement === 'below-model') {
     return {
@@ -62,13 +66,20 @@ export function ScrollTextActiveSync({ onActiveIndex }: { onActiveIndex: (index:
 }
 
 /** 渲染在 Canvas 外；仅 HTML */
-export function ScreenTextLayer({ activeScreenIndex }: { activeScreenIndex: number }) {
+export function ScreenTextLayer({
+  activeScreenIndex,
+  inspectMode = false,
+}: {
+  activeScreenIndex: number;
+  /** 仅用于叠放:查看3D 时把文字压到遮罩下面 */
+  inspectMode?: boolean;
+}) {
   const screen = SCREENS[activeScreenIndex];
   const text = screen?.text;
   if (!text) return null;
 
   return (
-    <div style={placementStyle(text.placement)}>
+    <div style={placementStyle(text.placement, inspectMode)}>
       <div style={{ marginBottom: 8 }}>{text.title}</div>
       {text.subtitle ? <div style={{ marginBottom: 8 }}>{text.subtitle}</div> : null}
       {text.lines?.map((line, i) => (
