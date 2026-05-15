@@ -14,11 +14,18 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type Compo
 import * as THREE from 'three';
 import type { Group } from 'three';
 
-import { IntroFadeSync, IntroMoonLayer } from '@/components/IntroMoonLayer';
+import { IntroMoonLayer } from '@/components/IntroMoonLayer';
 import { ScrollDebuggerPanel, ScrollDebuggerSync } from '@/components/ScrollDebugger';
-import { ScreenTextLayer, ScrollTextActiveSync } from '@/components/ScreenTextLayer';
-import { getIntroScreenFade } from '@/lib/introScroll';
-import { getScreenLayout, SCREENS, TOTAL_SCREENS } from '@/lib/screens';
+import { ScreenTextLayer, ScrollOffsetSync } from '@/components/ScreenTextLayer';
+import { getParallaxOffsetWorld } from '@/lib/parallax';
+import {
+  getRhythmState,
+  isScreen3CanvasWarmHold,
+  SCROLL_CONTROL_PAGES,
+  SCREEN3_AMBIENT_BG,
+  shouldCanvasBeTransparent,
+} from '@/lib/scrollRhythm';
+import { getScreenLayout, SCREENS } from '@/lib/screens';
 
 const INTRO_SKY_MID = '#0a1428';
 const INTRO_SKY_EDGE = '#020508';
@@ -44,7 +51,7 @@ function createNightBaseTexture() {
   return tex;
 }
 
-/** 屏 2/3:Canvas 铺夜色底;屏 1 时背景透明,让下层 2D 月亮/径向光透出 */
+/** Canvas 底色:见 scrollRhythm 月亮链注释;仅屏3停留铺暖月色,其余透明 */
 function IntroSkyBackdrop({ inspectMode }: { inspectMode: boolean }) {
   const scroll = useScroll();
   const scene = useThree((s) => s.scene);
@@ -52,13 +59,19 @@ function IntroSkyBackdrop({ inspectMode }: { inspectMode: boolean }) {
     () => (typeof document !== 'undefined' ? createNightBaseTexture() : null),
     [],
   );
+  const warmColor = useMemo(() => new THREE.Color(SCREEN3_AMBIENT_BG), []);
 
   useFrame(() => {
-    const fade = getIntroScreenFade(scroll.offset, inspectMode);
-    if (fade > 0.02) {
-      scene.background = null;
-    } else if (nightBaseTexture) {
+    if (inspectMode) {
       scene.background = nightBaseTexture;
+      return;
+    }
+    if (shouldCanvasBeTransparent(scroll.offset, false)) {
+      scene.background = null;
+    } else if (isScreen3CanvasWarmHold(scroll.offset)) {
+      scene.background = warmColor;
+    } else {
+      scene.background = null;
     }
   });
 
@@ -127,15 +140,7 @@ function WatermoonModel({
       return;
     }
 
-    const n = TOTAL_SCREENS;
-    if (n < 1) return;
-    const maxIdx = n - 1;
-    const span = Math.max(1, maxIdx);
-    const rawU = scroll.offset * span;
-    const u = THREE.MathUtils.clamp(Number.isFinite(rawU) ? rawU : 0, 0, span);
-    const i0 = THREE.MathUtils.clamp(Math.floor(u), 0, maxIdx);
-    const i1 = Math.min(i0 + 1, maxIdx);
-    const t = i0 === i1 ? 0 : THREE.MathUtils.clamp(u - i0, 0, 1);
+    const { i0, i1, t } = getRhythmState(scroll.offset);
 
     const a = getScreenLayout(SCREENS[i0]);
     const b = getScreenLayout(SCREENS[i1]);
@@ -150,9 +155,10 @@ function WatermoonModel({
     const vis = THREE.MathUtils.lerp(visibility01(a), visibility01(b), t);
 
     const breatheY = animation === 'breathe' ? Math.sin(state.clock.elapsedTime * 1.5) * 0.05 : 0;
+    const parallaxY = getParallaxOffsetWorld(scroll.offset, 'main');
 
     g.position.x = px;
-    g.position.y = py + breatheY;
+    g.position.y = py + breatheY + parallaxY;
     g.position.z = pz;
 
     g.rotation.set(rotation[0] + rx, rotation[1] + ry, rotation[2] + rz);
@@ -184,13 +190,9 @@ export default function ArtifactViewer({
 }: ArtifactViewerProps) {
   const scrollDbgLine1Ref = useRef<HTMLDivElement>(null);
   const scrollDbgLine2Ref = useRef<HTMLDivElement>(null);
-  const [activeTextScreen, setActiveTextScreen] = useState(0);
-  const [introFade, setIntroFade] = useState(1);
-  const onActiveTextScreen = useCallback((i: number) => {
-    setActiveTextScreen(i);
-  }, []);
-  const onIntroFade = useCallback((fade: number) => {
-    setIntroFade(fade);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const onScrollOffset = useCallback((o: number) => {
+    setScrollOffset(o);
   }, []);
 
   useEffect(() => {
@@ -200,9 +202,9 @@ export default function ArtifactViewer({
   return (
     <>
       <ScrollDebuggerPanel line1Ref={scrollDbgLine1Ref} line2Ref={scrollDbgLine2Ref} />
-      <IntroMoonLayer fade={introFade} inspectMode={inspectMode} />
-      <ScreenTextLayer activeScreenIndex={activeTextScreen} inspectMode={inspectMode} />
-      {/* 叙事 z=100 低于文字 1000；查看3D z=800 高于遮罩 500、低于 ✕ 1200 */}
+      <IntroMoonLayer scrollOffset={scrollOffset} inspectMode={inspectMode} />
+      <ScreenTextLayer scrollOffset={scrollOffset} inspectMode={inspectMode} />
+      {/* 月亮 z=30 < Canvas z=100 < 文字 z=1000；查看3D z=800 */}
       <div
         className="relative h-full w-full"
         style={{ zIndex: inspectMode ? 800 : 100 }}
@@ -212,9 +214,8 @@ export default function ArtifactViewer({
           camera={{ position: [2.8, 1.8, 2.8], fov: 45 }}
           gl={{ alpha: true, toneMappingExposure: 1.15 }}
         >
-        <ScrollControls pages={TOTAL_SCREENS} damping={0.25}>
+        <ScrollControls pages={SCROLL_CONTROL_PAGES} damping={0.25}>
           <IntroSkyBackdrop inspectMode={inspectMode} />
-          <IntroFadeSync onFade={onIntroFade} />
           <ambientLight intensity={0.55} />
           <hemisphereLight args={['#f4f4f5', '#3f3f46', 0.45]} />
           <directionalLight position={[4, 8, 5]} intensity={1.6} />
@@ -236,7 +237,7 @@ export default function ArtifactViewer({
             <Environment preset={hdriPreset as NonNullable<ComponentProps<typeof Environment>['preset']>} />
           </Suspense>
           <ScrollDebuggerSync line1Ref={scrollDbgLine1Ref} line2Ref={scrollDbgLine2Ref} />
-          <ScrollTextActiveSync onActiveIndex={onActiveTextScreen} />
+          <ScrollOffsetSync onOffset={onScrollOffset} />
           <OrbitControls
             makeDefault
             // 叙事模式:编排阶段临时解除角度限制,定稿后恢复下方注释

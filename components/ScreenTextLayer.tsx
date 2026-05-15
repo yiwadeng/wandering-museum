@@ -3,13 +3,17 @@
 import { useScroll } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, type CSSProperties } from 'react';
-import { SCREENS, TOTAL_SCREENS, type Screen, type ScreenText } from '@/lib/screens';
+import { getParallaxOffsetVh } from '@/lib/parallax';
+import { getTextScrollYVh } from '@/lib/scrollRhythm';
+import { SCREENS, type Screen, type ScreenText } from '@/lib/screens';
 
 /** 叙事:文字在 Canvas 上。查看3D:文字 < 遮罩(500) < Canvas(800) < ✕(1200) */
 const Z_TEXT_NARRATIVE = 1000;
 const Z_TEXT_INSPECT = 200;
 
 const TEXT_COLOR = '#faf9f6';
+/** 屏 3 暖月背景上的深色字 */
+const TEXT_COLOR_SCREEN3 = '#1a1a2e';
 
 /** 字号阶梯(rem):正文 1 → 信息/小字 ~0.85 → 题记/诗句 ~1.3 → 标题 ~2.25 */
 const TYPE = {
@@ -19,12 +23,12 @@ const TYPE = {
   title: { fontSize: '2.25rem', lineHeight: 1.2, fontWeight: 600 },
 } as const;
 
-/** 屏 3 基础字号 ×2(等价于此前整体 scale 2.0),transform scale 保持 1 */
+/** 屏 3 基础字号 ×2;字色写进 TYPE 避免被 body 浅色继承盖住 */
 const TYPE_AT_EASE = {
-  body: { fontSize: '2rem', lineHeight: 1.65, fontWeight: 400 },
-  meta: { fontSize: '1.7rem', lineHeight: 1.45, fontWeight: 400 },
-  lead: { fontSize: '2.6rem', lineHeight: 1.5, fontWeight: 400 },
-  title: { fontSize: '4.5rem', lineHeight: 1.2, fontWeight: 600 },
+  body: { fontSize: '2rem', lineHeight: 1.65, fontWeight: 400, color: TEXT_COLOR_SCREEN3 },
+  meta: { fontSize: '1.7rem', lineHeight: 1.45, fontWeight: 400, color: TEXT_COLOR_SCREEN3 },
+  lead: { fontSize: '2.6rem', lineHeight: 1.5, fontWeight: 400, color: TEXT_COLOR_SCREEN3 },
+  title: { fontSize: '4.5rem', lineHeight: 1.2, fontWeight: 600, color: TEXT_COLOR_SCREEN3 },
 } as const;
 
 type TextLayout = { offsetX: number; offsetY: number; scale: number };
@@ -41,12 +45,16 @@ function placementStyle(
   placement: ScreenText['placement'],
   inspectMode: boolean,
   layout: TextLayout,
+  scrollYVh: number,
+  parallaxVh: number,
+  screenId: string,
 ): CSSProperties {
   const { offsetX, offsetY, scale } = layout;
+  const y = `${scrollYVh + parallaxVh}vh`;
   const base: CSSProperties = {
     position: 'fixed',
     padding: '0.75rem 1rem',
-    color: TEXT_COLOR,
+    color: screenId === 'at-ease' ? TEXT_COLOR_SCREEN3 : TEXT_COLOR,
     pointerEvents: 'none',
     zIndex: inspectMode ? Z_TEXT_INSPECT : Z_TEXT_NARRATIVE,
   };
@@ -55,7 +63,7 @@ function placementStyle(
       ...base,
       bottom: '1.5rem',
       left: '50%',
-      transform: `translate(calc(-50% + ${offsetX}px), ${offsetY}px) scale(${scale})`,
+      transform: `translate(calc(-50% + ${offsetX}px), calc(${offsetY}px + ${y})) scale(${scale})`,
       transformOrigin: '50% 100%',
       maxWidth: 'min(92vw, 40rem)',
     };
@@ -65,7 +73,7 @@ function placementStyle(
       ...base,
       right: '1rem',
       top: '50%',
-      transform: `translate(${offsetX}px, calc(-50% + ${offsetY}px)) scale(${scale})`,
+      transform: `translate(${offsetX}px, calc(-50% + ${offsetY}px + ${y})) scale(${scale})`,
       transformOrigin: '100% 50%',
       maxWidth: 'min(42vw, 22rem)',
     };
@@ -74,7 +82,7 @@ function placementStyle(
     ...base,
     left: '1rem',
     top: '50%',
-    transform: `translate(${offsetX}px, calc(-50% + ${offsetY}px)) scale(${scale})`,
+    transform: `translate(${offsetX}px, calc(-50% + ${offsetY}px + ${y})) scale(${scale})`,
     transformOrigin: '0% 50%',
     maxWidth: 'min(42vw, 22rem)',
   };
@@ -147,42 +155,44 @@ function ScreenTextContent({ screen }: { screen: Screen }) {
   );
 }
 
-/** 在 ScrollControls 内使用；根据滚动段更新当前屏索引(与模型插值的 i0 一致) */
-export function ScrollTextActiveSync({ onActiveIndex }: { onActiveIndex: (index: number) => void }) {
+/** 在 ScrollControls 内同步 scroll.offset → 叙事 DOM */
+export function ScrollOffsetSync({ onOffset }: { onOffset: (offset: number) => void }) {
   const scroll = useScroll();
-  const lastRef = useRef(-1);
+  const onOffsetRef = useRef(onOffset);
+  onOffsetRef.current = onOffset;
 
   useFrame(() => {
-    const n = TOTAL_SCREENS;
-    const span = Math.max(1, n - 1);
-    const u = scroll.offset * span;
-    const idx = Math.min(Math.floor(u), n - 1);
-    if (idx !== lastRef.current) {
-      lastRef.current = idx;
-      onActiveIndex(idx);
-    }
+    onOffsetRef.current(scroll.offset);
   });
 
   return null;
 }
 
-/** 渲染在 Canvas 外；仅 HTML */
+/** 渲染在 Canvas 外；三段文字同时挂载,由 translateY(vh) 卷轴位移 */
 export function ScreenTextLayer({
-  activeScreenIndex,
+  scrollOffset,
   inspectMode = false,
 }: {
-  activeScreenIndex: number;
+  scrollOffset: number;
   inspectMode?: boolean;
 }) {
-  const screen = SCREENS[activeScreenIndex];
-  const text = screen?.text;
-  if (!text || !screen) return null;
-
-  const layout = TEXT_LAYOUT[screen.id] ?? DEFAULT_TEXT_LAYOUT;
-
   return (
-    <div style={placementStyle(text.placement, inspectMode, layout)}>
-      <ScreenTextContent screen={screen} />
-    </div>
+    <>
+      {SCREENS.map((screen, i) => {
+        const text = screen.text;
+        if (!text) return null;
+        const layout = TEXT_LAYOUT[screen.id] ?? DEFAULT_TEXT_LAYOUT;
+        const scrollYVh = getTextScrollYVh(i, scrollOffset);
+        const parallaxVh = getParallaxOffsetVh(scrollOffset, 'foreground', inspectMode);
+        return (
+          <div
+            key={screen.id}
+            style={placementStyle(text.placement, inspectMode, layout, scrollYVh, parallaxVh, screen.id)}
+          >
+            <ScreenTextContent screen={screen} />
+          </div>
+        );
+      })}
+    </>
   );
 }
