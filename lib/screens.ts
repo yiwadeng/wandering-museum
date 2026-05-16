@@ -23,11 +23,24 @@ export type ScreenText = {
   carouselPlaceholder?: string;
 };
 
+export type DetailLabel = {
+  id: string;
+  text: string;
+  /** 标签文字在视口中的位置(百分比 0-100,(0,0) 为左上角) */
+  labelPos: { x: number; y: number };
+  /** 引线另一端连接到模型部位的位置(百分比 0-100) */
+  anchorPos: { x: number; y: number };
+};
+
 export type Screen = {
   id: string;
   name: string;
   holdWidth?: number;
   transitionWidth?: number;
+  /** 该屏期间锁住相机(禁用旋转),用于引线/标注等精确对位场景 */
+  lockCamera?: boolean;
+  /** 该屏的引线标签数组,DetailLabelsLayer 会读取 */
+  labels?: DetailLabel[];
   desktop: ScreenModelState;
   mobile: ScreenModelState;
   /** 无此字段或留空表示该屏不叠文字 */
@@ -189,6 +202,18 @@ export const SCREENS: Screen[] = [
     desktop: detailLabelsDesktop,
     mobile: { ...detailLabelsDesktop },
     text: detailLabelsText,
+    lockCamera: true,
+    labels: [
+      { id: 'zizai',  text: '自在坐',       labelPos: { x: 22, y: 38 }, anchorPos: { x: 40, y: 50 } },
+      { id: 'faji',   text: '高束发髻',     labelPos: { x: 38, y: 12 }, anchorPos: { x: 48, y: 18 } },
+      { id: 'baoguan',text: '宝冠 / 化佛(遗失)', labelPos: { x: 64, y: 14 }, anchorPos: { x: 53, y: 16 } },
+      { id: 'yingluo',text: '璎珞',         labelPos: { x: 70, y: 32 }, anchorPos: { x: 52, y: 36 } },
+      { id: 'bichuan',text: '臂钏',         labelPos: { x: 26, y: 46 }, anchorPos: { x: 39, y: 42 } },
+      { id: 'pibo',   text: '披帛',         labelPos: { x: 70, y: 44 }, anchorPos: { x: 54, y: 42 } },
+      { id: 'jiangqun',text:'绛裙',         labelPos: { x: 70, y: 56 }, anchorPos: { x: 52, y: 56 } },
+      { id: 'putuo',  text: '普陀岩',       labelPos: { x: 24, y: 72 }, anchorPos: { x: 42, y: 70 } },
+      { id: 'taLian', text: '踏莲',         labelPos: { x: 70, y: 72 }, anchorPos: { x: 53, y: 72 } },
+    ],
   },
   {
     id: 'dongfang-guanyin',
