@@ -3,17 +3,85 @@ import * as THREE from 'three';
 /**
  * 亮相停留 + 过场过渡：scroll.offset ∈ [0,1] 上的区间比例。
  * 停留区画面静止；过场区在两屏姿态间快速插值。
+ * 宽度总和 = 1；改节奏只改 SCROLL_RHYTHM_SEGMENTS，RHYTHM_CONFIG 自动对齐。
  */
+export type RhythmSegmentId = 'hold1' | 'trans1to2' | 'hold2' | 'trans2to3' | 'hold3';
+
+export type RhythmSegment = {
+  id: RhythmSegmentId;
+  /** HUD 短标签，如「屏1→2过场」 */
+  label: string;
+  width: number;
+  start: number;
+  end: number;
+  /** 这一段滚动时，画面上主要在发生什么 */
+  description: string;
+};
+
+export const SCROLL_RHYTHM_SEGMENTS: readonly RhythmSegment[] = [
+  // 屏1停留 3%：开场定稿一口气，避免第一次滚动「画面不动」
+  {
+    id: 'hold1',
+    label: '屏1停留',
+    width: 0.03,
+    start: 0,
+    end: 0.03,
+    description: '大月居中、深色夜空定稿；屏1文案就位，几乎不耗滚动',
+  },
+  // 屏1→2 过场 25%：月亮要完成大幅位移+缩小，需要足够滚动时间
+  {
+    id: 'trans1to2',
+    label: '屏1→2过场',
+    width: 0.25,
+    start: 0.03,
+    end: 0.28,
+    description: '月亮从居中缩小、飞到右上角；屏1文字向上滑出；屏2文字从下方升起',
+  },
+  // 屏2停留 20%：角月+屏2文案，给中段阅读留白
+  {
+    id: 'hold2',
+    label: '屏2停留',
+    width: 0.2,
+    start: 0.28,
+    end: 0.48,
+    description: '角月挂右上角；屏2文案居中可读',
+  },
+  // 屏2→3 过场 25%：月亮扩大成整屏背景+背景渐变，视觉变化最大
+  {
+    id: 'trans2to3',
+    label: '屏2→3过场',
+    width: 0.25,
+    start: 0.48,
+    end: 0.73,
+    description: '月亮扩大成整屏环境；整页由深靛渐变为暖月；屏2文字滑出、屏3文字升起',
+  },
+  // 屏3停留 27%：终章暖环境+模型，停留预算最长
+  {
+    id: 'hold3',
+    label: '屏3停留',
+    width: 0.27,
+    start: 0.73,
+    end: 1,
+    description: '月与暖色环境融合；模型与屏3文案完整呈现',
+  },
+] as const;
+
+function segmentBounds(id: RhythmSegmentId) {
+  const s = SCROLL_RHYTHM_SEGMENTS.find((x) => x.id === id)!;
+  return { start: s.start, end: s.end };
+}
+
+/** 节奏逻辑仍用 start/end；数值与 SCROLL_RHYTHM_SEGMENTS 同源 */
 export const RHYTHM_CONFIG = {
-  hold1: { start: 0, end: 0.12 },
-  trans1to2: { start: 0.12, end: 0.36 },
-  hold2: { start: 0.36, end: 0.51 },
-  trans2to3: { start: 0.51, end: 0.73 },
-  hold3: { start: 0.73, end: 1 },
+  hold1: segmentBounds('hold1'),
+  trans1to2: segmentBounds('trans1to2'),
+  hold2: segmentBounds('hold2'),
+  trans2to3: segmentBounds('trans2to3'),
+  hold3: segmentBounds('hold3'),
 } as const;
 
-/** 总滚动距离：约 4 屏高走完叙事(3 屏内容 + 余量) */
-export const SCROLL_CONTROL_PAGES = 4;
+/** 总滚动距离：约 5 屏高走完叙事 */
+export const SCROLL_CONTROL_PAGES = 5;
 
 const OFF_BOTTOM_VH = 100;
 const OFF_TOP_VH = -100;
@@ -44,6 +112,17 @@ export type RhythmState = {
 
 function clamp01(x: number) {
   return THREE.MathUtils.clamp(Number.isFinite(x) ? x : 0, 0, 1);
+}
+
+/** 当前 scroll.offset 落在哪一段（与 getRhythmState 边界一致） */
+export function getRhythmSegmentAt(scrollOffset: number): RhythmSegment {
+  const o = clamp01(scrollOffset);
+  const segs = SCROLL_RHYTHM_SEGMENTS;
+  for (let i = 0; i < segs.length; i++) {
+    const seg = segs[i];
+    if (o < seg.end || (i === segs.length - 1 && o <= seg.end)) return seg;
+  }
+  return segs[segs.length - 1];
 }
 
 export function easeInOutCubic(t: number) {

@@ -10,13 +10,17 @@ import {
   useGLTF,
   useScroll,
 } from '@react-three/drei';
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { createRef, Suspense, useEffect, useMemo, useRef, type ComponentProps } from 'react';
 import * as THREE from 'three';
 import type { Group } from 'three';
 
 import { IntroMoonLayer } from '@/components/IntroMoonLayer';
+import type { MoonDomRefs } from '@/components/narrativeDomRefs';
 import { ScrollDebuggerPanel, ScrollDebuggerSync } from '@/components/ScrollDebugger';
-import { ScreenTextLayer, ScrollOffsetSync } from '@/components/ScreenTextLayer';
+// import { LenisScrollBridge } from '@/components/LenisScrollBridge';
+import { ScrollNarrativeDomSync } from '@/components/ScrollNarrativeDomSync';
+import { ScreenTextLayer } from '@/components/ScreenTextLayer';
+import { SCREENS } from '@/lib/screens';
 import { getParallaxOffsetWorld } from '@/lib/parallax';
 import {
   getRhythmState,
@@ -25,7 +29,7 @@ import {
   SCREEN3_AMBIENT_BG,
   shouldCanvasBeTransparent,
 } from '@/lib/scrollRhythm';
-import { getScreenLayout, SCREENS } from '@/lib/screens';
+import { getScreenLayout } from '@/lib/screens';
 
 const INTRO_SKY_MID = '#0a1428';
 const INTRO_SKY_EDGE = '#020508';
@@ -190,10 +194,18 @@ export default function ArtifactViewer({
 }: ArtifactViewerProps) {
   const scrollDbgLine1Ref = useRef<HTMLDivElement>(null);
   const scrollDbgLine2Ref = useRef<HTMLDivElement>(null);
-  const [scrollOffset, setScrollOffset] = useState(0);
-  const onScrollOffset = useCallback((o: number) => {
-    setScrollOffset(o);
-  }, []);
+  const moonAmbientRef = useRef<HTMLDivElement>(null);
+  const moonIntroSkyRef = useRef<HTMLDivElement>(null);
+  const moonDiscRef = useRef<HTMLDivElement>(null);
+  const moonRefs = useRef<MoonDomRefs>({
+    ambient: moonAmbientRef,
+    introSky: moonIntroSkyRef,
+    moon: moonDiscRef,
+  });
+  const textBlockRefs = useMemo(
+    () => SCREENS.map(() => createRef<HTMLDivElement | null>()),
+    [],
+  );
 
   useEffect(() => {
     void useGLTF.preload(modelUrl);
@@ -202,8 +214,8 @@ export default function ArtifactViewer({
   return (
     <>
       <ScrollDebuggerPanel line1Ref={scrollDbgLine1Ref} line2Ref={scrollDbgLine2Ref} />
-      <IntroMoonLayer scrollOffset={scrollOffset} inspectMode={inspectMode} />
-      <ScreenTextLayer scrollOffset={scrollOffset} inspectMode={inspectMode} />
+      <IntroMoonLayer refs={moonRefs.current} />
+      <ScreenTextLayer blockRefs={textBlockRefs} inspectMode={inspectMode} />
       {/* 月亮 z=30 < Canvas z=100 < 文字 z=1000；查看3D z=800 */}
       <div
         className="relative h-full w-full"
@@ -215,6 +227,7 @@ export default function ArtifactViewer({
           gl={{ alpha: true, toneMappingExposure: 1.15 }}
         >
         <ScrollControls pages={SCROLL_CONTROL_PAGES} damping={0.25}>
+          {/* <LenisScrollBridge enabled={!inspectMode} /> */}
           <IntroSkyBackdrop inspectMode={inspectMode} />
           <ambientLight intensity={0.55} />
           <hemisphereLight args={['#f4f4f5', '#3f3f46', 0.45]} />
@@ -237,7 +250,11 @@ export default function ArtifactViewer({
             <Environment preset={hdriPreset as NonNullable<ComponentProps<typeof Environment>['preset']>} />
           </Suspense>
           <ScrollDebuggerSync line1Ref={scrollDbgLine1Ref} line2Ref={scrollDbgLine2Ref} />
-          <ScrollOffsetSync onOffset={onScrollOffset} />
+          <ScrollNarrativeDomSync
+            moonRefs={moonRefs.current}
+            textBlockRefs={textBlockRefs}
+            inspectMode={inspectMode}
+          />
           <OrbitControls
             makeDefault
             // 叙事模式:编排阶段临时解除角度限制,定稿后恢复下方注释

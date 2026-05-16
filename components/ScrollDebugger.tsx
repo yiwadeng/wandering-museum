@@ -4,7 +4,7 @@ import { useScroll } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useState, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
-import { getRhythmState } from '@/lib/scrollRhythm';
+import { getRhythmSegmentAt, getRhythmState } from '@/lib/scrollRhythm';
 import { SCREENS } from '@/lib/screens';
 
 export type ScrollDebuggerLineRefs = {
@@ -51,11 +51,11 @@ export function ScrollDebuggerSync({ line1Ref, line2Ref }: ScrollDebuggerLineRef
   const scroll = useScroll();
 
   useFrame(() => {
-    const { phase, activeScreenIndex, i0, i1, t } = getRhythmState(scroll.offset);
+    const { activeScreenIndex } = getRhythmState(scroll.offset);
+    const seg = getRhythmSegmentAt(scroll.offset);
     const name = SCREENS[activeScreenIndex]?.name ?? '—';
-    const phaseLabel = phase === 'hold' ? '停留' : `过场 ${i0 + 1}→${i1 + 1} (${(t * 100).toFixed(0)}%)`;
     if (line1Ref.current) {
-      line1Ref.current.textContent = `scroll: ${(scroll.offset * 100).toFixed(1)}% · ${phaseLabel}`;
+      line1Ref.current.textContent = `scroll: ${(scroll.offset * 100).toFixed(1)}% · ${seg.label} · ${seg.description}`;
     }
     if (line2Ref.current) {
       line2Ref.current.textContent = `当前屏: [${name}]`;
