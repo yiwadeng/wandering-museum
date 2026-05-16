@@ -1,3 +1,5 @@
+import type { MoonState } from '@/lib/scrollRhythm';
+
 export type ScreenModelState = {
   position: [number, number, number];
   scale: number;
@@ -41,6 +43,10 @@ export type Screen = {
   lockCamera?: boolean;
   /** 该屏的引线标签数组,DetailLabelsLayer 会读取 */
   labels?: DetailLabel[];
+  /** 该屏背景模式,不填默认 'dark' */
+  bgMode?: 'dark' | 'warm';
+  /** 该屏月亮状态,不填该屏月亮隐藏 */
+  moonState?: MoonState;
   desktop: ScreenModelState;
   mobile: ScreenModelState;
   /** 无此字段或留空表示该屏不叠文字 */
@@ -195,6 +201,8 @@ export const SCREENS: Screen[] = [
     text: introText,
     holdWidth: 0.03,
     transitionWidth: 0.25,
+    bgMode: 'dark',
+    moonState: { positionX: -5, positionY: -13, sizePx: 680, sizeVh: 0, opacity: 1 },
   },
   {
     id: 'detail-labels',
@@ -214,6 +222,8 @@ export const SCREENS: Screen[] = [
       { id: 'putuo',  text: '普陀岩',       labelPos: { x: 24, y: 72 }, anchorPos: { x: 42, y: 70 } },
       { id: 'taLian', text: '踏莲',         labelPos: { x: 70, y: 72 }, anchorPos: { x: 53, y: 72 } },
     ],
+    bgMode: 'dark',
+    moonState: { positionX: 32, positionY: -32, sizePx: 200, sizeVh: 0, opacity: 1 },
   },
   {
     id: 'dongfang-guanyin',
@@ -223,6 +233,8 @@ export const SCREENS: Screen[] = [
     text: dongfangText,
     holdWidth: 0.20,
     transitionWidth: 0.25,
+    bgMode: 'dark',
+    moonState: { positionX: -28, positionY: 20, sizePx: 280, sizeVh: 0, opacity: 0.95 },
   },
   {
     id: 'at-ease',
@@ -231,23 +243,37 @@ export const SCREENS: Screen[] = [
     mobile: { ...atEaseDesktop },
     text: atEaseText,
     holdWidth: 0.27,
+    bgMode: 'dark',
+    moonState: { positionX: -15, positionY: -8, sizePx: 520, sizeVh: 0, opacity: 1 },
   },
   { id: 'not-two', name: '不二',
-    desktop: notTwoDesktop, mobile: { ...notTwoDesktop }, text: notTwoText },
+    desktop: notTwoDesktop, mobile: { ...notTwoDesktop }, text: notTwoText,
+    bgMode: 'dark',
+    moonState: { positionX: 0, positionY: -25, sizePx: 280, sizeVh: 0, opacity: 0.9 } },
   { id: 'aigc-sapling', name: '一木造·树苗',
-    desktop: aigcSaplingDesktop, mobile: { ...aigcSaplingDesktop }, text: aigcSaplingText },
+    desktop: aigcSaplingDesktop, mobile: { ...aigcSaplingDesktop }, text: aigcSaplingText,
+    bgMode: 'warm',
+    moonState: { positionX: 0, positionY: 0, sizePx: 0, sizeVh: 200, opacity: 1 } },
   { id: 'aigc-tree-to-guanyin', name: '一木造·成树',
-    desktop: aigcTreeDesktop, mobile: { ...aigcTreeDesktop }, text: aigcTreeText },
+    desktop: aigcTreeDesktop, mobile: { ...aigcTreeDesktop }, text: aigcTreeText,
+    bgMode: 'warm',
+    moonState: { positionX: 0, positionY: 0, sizePx: 0, sizeVh: 200, opacity: 1 } },
   { id: 'yimuzao', name: '一木造',
-    desktop: yimuzaoDesktop, mobile: { ...yimuzaoDesktop }, text: yimuzaoText },
+    desktop: yimuzaoDesktop, mobile: { ...yimuzaoDesktop }, text: yimuzaoText,
+    bgMode: 'dark',
+    moonState: { positionX: 32, positionY: -32, sizePx: 200, sizeVh: 0, opacity: 1 } },
   { id: 'yimuzao-ripples', name: '一木造·涟漪',
-    desktop: yimuzaoRipplesDesktop, mobile: { ...yimuzaoRipplesDesktop }, text: yimuzaoRipplesText },
+    desktop: yimuzaoRipplesDesktop, mobile: { ...yimuzaoRipplesDesktop }, text: yimuzaoRipplesText,
+    bgMode: 'dark' },
   { id: 'loss-history', name: '流失历史',
-    desktop: lossHistoryDesktop, mobile: { ...lossHistoryDesktop }, text: lossHistoryText },
+    desktop: lossHistoryDesktop, mobile: { ...lossHistoryDesktop }, text: lossHistoryText,
+    bgMode: 'dark' },
   { id: 'nelson-temple', name: '纳尔逊的中国庙宇',
-    desktop: nelsonTempleDesktop, mobile: { ...nelsonTempleDesktop }, text: nelsonTempleText },
+    desktop: nelsonTempleDesktop, mobile: { ...nelsonTempleDesktop }, text: nelsonTempleText,
+    bgMode: 'dark' },
   { id: 'postscript', name: '后记 & 文献',
-    desktop: postscriptDesktop, mobile: { ...postscriptDesktop }, text: postscriptText },
+    desktop: postscriptDesktop, mobile: { ...postscriptDesktop }, text: postscriptText,
+    bgMode: 'dark' },
 ];
 
 export const TOTAL_SCREENS = SCREENS.length;

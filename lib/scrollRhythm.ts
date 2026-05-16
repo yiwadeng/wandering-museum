@@ -27,6 +27,10 @@ export type RhythmSegment = {
   toScreen: number;
 };
 
+const HIDDEN_MOON_FALLBACK: MoonState = {
+  positionX: 32, positionY: -32, sizePx: 200, sizeVh: 0, opacity: 0,
+};
+
 function buildSegments(screens: typeof SCREENS): RhythmSegment[] {
   const raw: Array<Omit<RhythmSegment, 'start' | 'end'>> = [];
   let total = 0;
@@ -175,35 +179,34 @@ export function getTextScrollYVh(screenIndex: number, scrollOffset: number): num
   return OFF_TOP_VH;
 }
 
-/** 月亮:维持原 1→2→3 编排;屏 3 及之后统一 HOLD3(暂时处理) */
 export function getMoonState(scrollOffset: number, inspectMode: boolean): MoonState {
   if (inspectMode) return { ...MOON_HOLD2, opacity: 0 };
 
   const seg = getRhythmSegmentAt(scrollOffset);
-  const t = easeInOutCubic(segmentLocal(scrollOffset, seg.start, seg.end));
+  const fromMoon = SCREENS[seg.fromScreen]?.moonState ?? HIDDEN_MOON_FALLBACK;
+  const toMoon = SCREENS[seg.toScreen]?.moonState ?? HIDDEN_MOON_FALLBACK;
 
-  if (seg.kind === 'hold') {
-    if (seg.fromScreen === 0) return MOON_HOLD1;
-    if (seg.fromScreen === 1) return MOON_HOLD2;
-    return MOON_HOLD3;
-  }
-  if (seg.fromScreen === 0 && seg.toScreen === 1) return lerpMoon(MOON_HOLD1, MOON_HOLD2, t);
-  if (seg.fromScreen === 1 && seg.toScreen === 2) return lerpMoon(MOON_HOLD2, MOON_HOLD3, t);
-  return MOON_HOLD3;
+  if (seg.kind === 'hold') return fromMoon;
+
+  const t = easeInOutCubic(segmentLocal(scrollOffset, seg.start, seg.end));
+  return lerpMoon(fromMoon, toMoon, t);
 }
 
 export function getPageAmbientBgMix(scrollOffset: number): number {
   const seg = getRhythmSegmentAt(scrollOffset);
-  if (seg.kind === 'trans' && seg.fromScreen === 1 && seg.toScreen === 2) {
-    return easeInOutCubic(segmentLocal(scrollOffset, seg.start, seg.end));
-  }
-  if (seg.fromScreen >= 2) return 1;
-  return 0;
+  const fromWarm = SCREENS[seg.fromScreen]?.bgMode === 'warm' ? 1 : 0;
+  const toWarm = SCREENS[seg.toScreen]?.bgMode === 'warm' ? 1 : 0;
+
+  if (seg.kind === 'hold') return fromWarm;
+
+  const t = easeInOutCubic(segmentLocal(scrollOffset, seg.start, seg.end));
+  return THREE.MathUtils.lerp(fromWarm, toWarm, t);
 }
 
+/** Canvas 在"暖色屏"hold 期铺暖色;过场期间需透明以露出 DOM 月亮 */
 export function isScreen3CanvasWarmHold(scrollOffset: number): boolean {
   const seg = getRhythmSegmentAt(scrollOffset);
-  return seg.fromScreen >= 2 && seg.kind === 'hold';
+  return seg.kind === 'hold' && SCREENS[seg.fromScreen]?.bgMode === 'warm';
 }
 
 export function shouldCanvasBeTransparent(scrollOffset: number, inspectMode: boolean): boolean {
