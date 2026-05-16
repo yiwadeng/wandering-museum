@@ -26,6 +26,8 @@ export type ScreenText = {
 export type Screen = {
   id: string;
   name: string;
+  holdWidth?: number;
+  transitionWidth?: number;
   desktop: ScreenModelState;
   mobile: ScreenModelState;
   /** 无此字段或留空表示该屏不叠文字 */
@@ -80,6 +82,97 @@ const atEaseText: ScreenText = {
   body: '玄奘重译"观音"为"观自在",认为"自在"更符合梵文 Avalokiteśvara 原意。水月观音的自在坐(又名游戏坐),是一种放松而高贵的坐姿。梁思成总结为:一足下垂,一足上踞,一臂下垂,一臂倚踞足膝上。',
 };
 
+const detailLabelsDesktop: ScreenModelState = {
+  position: [0, 0, 0], scale: 0.15, rotation: [-0.2, 0.05, 0.1], modelVisible: true,
+};
+const detailLabelsText: ScreenText = {
+  placement: 'below-model',
+  title: '细节标注',
+  body: '①自在坐 / ②高束发髻 / ③宝冠·化佛(遗失) / ④璎珞 / ⑤臂钏 / ⑥披帛 / ⑦绛裙 / ⑧普陀岩 / ⑨踏莲',
+  smallPrint: '(待实现:引线图层 + 放大镜工具,本屏模型锁住不旋转)',
+};
+
+const notTwoDesktop: ScreenModelState = {
+  position: [0.1, 0, 0], scale: 0.13, rotation: [0, 0, 0], modelVisible: true,
+};
+const notTwoText: ScreenText = {
+  placement: 'model-right',
+  title: '不二',
+  subtitle: '女面男身,超脱对立',
+  body: '南北朝至明清,观音由男相渐变为女相。辽金时期的这尊,正处于女面男身的过渡之间——还没有决定要成为谁。',
+  smallPrint: '(待实现:朝代时间互动滑块,拖动查看形象演变)',
+};
+
+const aigcSaplingDesktop: ScreenModelState = {
+  position: [0, 0, 0], scale: 0.05, rotation: [0, 0, 0], modelVisible: false,
+};
+const aigcSaplingText: ScreenText = {
+  placement: 'below-model',
+  title: '约公元 8 世纪',
+  body: '一棵小杨树在中国北方某地扎根。数百年间,它沐浴过大唐的风雨,看见过安史之乱、五代烽火,感受过来自北方铁蹄的大地震动,也听过十几代百姓的哭声和笑声。',
+  smallPrint: '(待实现:AIGC 树苗成长视频 + 月亮扩张成暖色满屏背景)',
+};
+
+const aigcTreeDesktop: ScreenModelState = {
+  position: [0, -0.05, 0], scale: 0.14, rotation: [-0.1, 0, 0.1], modelVisible: true,
+};
+const aigcTreeText: ScreenText = {
+  placement: 'below-model',
+  title: '一木造·成树',
+  body: '经过辽代工匠的雕凿,这一切便通过观音的双眼,与每个仰望她的人静静对视。',
+  smallPrint: '(待实现:AIGC 大树变木料、木料变观音的接驳视频,末帧与 3D 模型对齐)',
+};
+
+const yimuzaoDesktop: ScreenModelState = {
+  position: [0.1, 0.05, 0], scale: 0.13, rotation: [-0.1, 0.1, 0.2], modelVisible: true,
+};
+const yimuzaoText: ScreenText = {
+  placement: 'model-right',
+  title: '一木造',
+  body: '除伸出的右手臂外,整个木雕由一根完整的木料雕成。这种体量的"一木造"在世界木雕史上极其罕见。木雕宽近 1.7 米,需要直径 1.8-2 米的巨型杨木为原料,树龄约 300-500 年。',
+  smallPrint: '(待实现:月亮叠化成年轮、巨大树桩背景)',
+};
+
+const yimuzaoRipplesDesktop: ScreenModelState = {
+  position: [-0.05, -0.1, 0], scale: 0.15, rotation: [-0.3, 0.1, 0.3], modelVisible: true,
+};
+const yimuzaoRipplesText: ScreenText = {
+  placement: 'below-model',
+  title: '一木造·涟漪',
+  body: '古代木雕工匠从背面开槽,掏空内芯——内外壁同步接触空气,千年不易开裂。一木之内,藏着一棵杨树千年的呼吸。',
+  smallPrint: '(待实现:观音上下浮动 + 同步涟漪扩散动画)',
+};
+
+const lossHistoryDesktop: ScreenModelState = {
+  position: [-1.8, 0, 0], scale: 0.08, rotation: [0, 0.3, 0], modelVisible: true,
+};
+const lossHistoryText: ScreenText = {
+  placement: 'model-right',
+  title: '流失历史',
+  body: '20 世纪初,西方艺术市场对"中国雕塑"的需求骤增。一面是买方市场催生的源头掠夺,一面是部分文物因西方博物馆而留存。圆明园的被掠、敦煌的被盗、寺庙的被贩——是不同路径,需要分别讲述。',
+  smallPrint: '(待实现:北平古董店历史照片 + AIGC 模拟场景图,模型转为半透明背景底纹)',
+};
+
+const nelsonTempleDesktop: ScreenModelState = {
+  position: [0, 0, 0], scale: 0.13, rotation: [0, 0, 0], modelVisible: true,
+};
+const nelsonTempleText: ScreenText = {
+  placement: 'below-model',
+  title: '如今,在纳尔逊',
+  body: '1934 年,堪萨斯城纳尔逊-阿特金斯艺术博物馆购于古董商人卢芹斋。她从此栖身于一座异国的中式厅堂——既是归处,也是无法归家的归处。',
+  smallPrint: '(待实现:高斯喷溅生成的纳尔逊中国庙厅 3D 空间为背景,可上下左右查看)',
+};
+
+const postscriptDesktop: ScreenModelState = {
+  position: [0, 0, 0], scale: 0.05, rotation: [0, 0, 0], modelVisible: false,
+};
+const postscriptText: ScreenText = {
+  placement: 'below-model',
+  title: '后记 & 文献',
+  body: '本词条参考自纳尔逊-阿特金斯艺术博物馆官方藏品记录、芝加哥大学东亚研究中心相关论文,及《华严经·普门品》《观音造像史》等文献。',
+  smallPrint: '(待实现:可展开脚注引用列表,点击展开、10 秒自动收回)',
+};
+
 export const SCREENS: Screen[] = [
   {
     id: 'intro',
@@ -87,6 +180,15 @@ export const SCREENS: Screen[] = [
     desktop: introDesktop,
     mobile: { ...introDesktop },
     text: introText,
+    holdWidth: 0.03,
+    transitionWidth: 0.25,
+  },
+  {
+    id: 'detail-labels',
+    name: '细节标注',
+    desktop: detailLabelsDesktop,
+    mobile: { ...detailLabelsDesktop },
+    text: detailLabelsText,
   },
   {
     id: 'dongfang-guanyin',
@@ -94,6 +196,8 @@ export const SCREENS: Screen[] = [
     desktop: dongfangDesktop,
     mobile: { ...dongfangDesktop },
     text: dongfangText,
+    holdWidth: 0.20,
+    transitionWidth: 0.25,
   },
   {
     id: 'at-ease',
@@ -101,7 +205,24 @@ export const SCREENS: Screen[] = [
     desktop: atEaseDesktop,
     mobile: { ...atEaseDesktop },
     text: atEaseText,
+    holdWidth: 0.27,
   },
+  { id: 'not-two', name: '不二',
+    desktop: notTwoDesktop, mobile: { ...notTwoDesktop }, text: notTwoText },
+  { id: 'aigc-sapling', name: '一木造·树苗',
+    desktop: aigcSaplingDesktop, mobile: { ...aigcSaplingDesktop }, text: aigcSaplingText },
+  { id: 'aigc-tree-to-guanyin', name: '一木造·成树',
+    desktop: aigcTreeDesktop, mobile: { ...aigcTreeDesktop }, text: aigcTreeText },
+  { id: 'yimuzao', name: '一木造',
+    desktop: yimuzaoDesktop, mobile: { ...yimuzaoDesktop }, text: yimuzaoText },
+  { id: 'yimuzao-ripples', name: '一木造·涟漪',
+    desktop: yimuzaoRipplesDesktop, mobile: { ...yimuzaoRipplesDesktop }, text: yimuzaoRipplesText },
+  { id: 'loss-history', name: '流失历史',
+    desktop: lossHistoryDesktop, mobile: { ...lossHistoryDesktop }, text: lossHistoryText },
+  { id: 'nelson-temple', name: '纳尔逊的中国庙宇',
+    desktop: nelsonTempleDesktop, mobile: { ...nelsonTempleDesktop }, text: nelsonTempleText },
+  { id: 'postscript', name: '后记 & 文献',
+    desktop: postscriptDesktop, mobile: { ...postscriptDesktop }, text: postscriptText },
 ];
 
 export const TOTAL_SCREENS = SCREENS.length;

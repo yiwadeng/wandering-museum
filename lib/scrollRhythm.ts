@@ -1,128 +1,115 @@
 import * as THREE from 'three';
+import { SCREENS } from '@/lib/screens';
 
 /**
- * 亮相停留 + 过场过渡：scroll.offset ∈ [0,1] 上的区间比例。
- * 停留区画面静止；过场区在两屏姿态间快速插值。
- * 宽度总和 = 1；改节奏只改 SCROLL_RHYTHM_SEGMENTS，RHYTHM_CONFIG 自动对齐。
+ * 节奏机制:每屏由 hold(停留)+ transition(过场)组成。
+ * 宽度从 SCREENS 数组按需读取,缺省用 DEFAULT 值,总宽度自动归一化为 1。
+ * 加屏 / 删屏 / 调序 → 只动 SCREENS,本文件自动重算。
+ *
+ * 注:月亮叙事链(MOON_HOLD1/2/3)与暖月底色目前保留原 3 屏编排;
+ * 屏 3 之后维持 HOLD3 状态。月亮的精细编排留待下一轮专门做。
  */
-export type RhythmSegmentId = 'hold1' | 'trans1to2' | 'hold2' | 'trans2to3' | 'hold3';
+
+const DEFAULT_HOLD_WIDTH = 0.08;
+const DEFAULT_TRANSITION_WIDTH = 0.12;
+
+export type RhythmSegmentId = string;
 
 export type RhythmSegment = {
   id: RhythmSegmentId;
-  /** HUD 短标签，如「屏1→2过场」 */
   label: string;
   width: number;
   start: number;
   end: number;
-  /** 这一段滚动时，画面上主要在发生什么 */
   description: string;
+  kind: 'hold' | 'trans';
+  fromScreen: number;
+  toScreen: number;
 };
 
-export const SCROLL_RHYTHM_SEGMENTS: readonly RhythmSegment[] = [
-  // 屏1停留 3%：开场定稿一口气，避免第一次滚动「画面不动」
-  {
-    id: 'hold1',
-    label: '屏1停留',
-    width: 0.03,
-    start: 0,
-    end: 0.03,
-    description: '大月居中、深色夜空定稿；屏1文案就位，几乎不耗滚动',
-  },
-  // 屏1→2 过场 25%：月亮要完成大幅位移+缩小，需要足够滚动时间
-  {
-    id: 'trans1to2',
-    label: '屏1→2过场',
-    width: 0.25,
-    start: 0.03,
-    end: 0.28,
-    description: '月亮从居中缩小、飞到右上角；屏1文字向上滑出；屏2文字从下方升起',
-  },
-  // 屏2停留 20%：角月+屏2文案，给中段阅读留白
-  {
-    id: 'hold2',
-    label: '屏2停留',
-    width: 0.2,
-    start: 0.28,
-    end: 0.48,
-    description: '角月挂右上角；屏2文案居中可读',
-  },
-  // 屏2→3 过场 25%：月亮扩大成整屏背景+背景渐变，视觉变化最大
-  {
-    id: 'trans2to3',
-    label: '屏2→3过场',
-    width: 0.25,
-    start: 0.48,
-    end: 0.73,
-    description: '月亮扩大成整屏环境；整页由深靛渐变为暖月；屏2文字滑出、屏3文字升起',
-  },
-  // 屏3停留 27%：终章暖环境+模型，停留预算最长
-  {
-    id: 'hold3',
-    label: '屏3停留',
-    width: 0.27,
-    start: 0.73,
-    end: 1,
-    description: '月与暖色环境融合；模型与屏3文案完整呈现',
-  },
-] as const;
+function buildSegments(screens: typeof SCREENS): RhythmSegment[] {
+  const raw: Array<Omit<RhythmSegment, 'start' | 'end'>> = [];
+  let total = 0;
 
-function segmentBounds(id: RhythmSegmentId) {
-  const s = SCROLL_RHYTHM_SEGMENTS.find((x) => x.id === id)!;
-  return { start: s.start, end: s.end };
+  screens.forEach((s, i) => {
+    const h = s.holdWidth ?? DEFAULT_HOLD_WIDTH;
+    raw.push({
+      id: `hold${i + 1}`,
+      label: `屏${i + 1}停留`,
+      width: h,
+      description: `${s.name} 稳定显示`,
+      kind: 'hold',
+      fromScreen: i,
+      toScreen: i,
+    });
+    total += h;
+
+    if (i < screens.length - 1) {
+      const t = s.transitionWidth ?? DEFAULT_TRANSITION_WIDTH;
+      raw.push({
+        id: `trans${i + 1}to${i + 2}`,
+        label: `屏${i + 1}→${i + 2}过场`,
+        width: t,
+        description: `过渡:${s.name} → ${screens[i + 1].name}`,
+        kind: 'trans',
+        fromScreen: i,
+        toScreen: i + 1,
+      });
+      total += t;
+    }
+  });
+
+  const out: RhythmSegment[] = [];
+  let cursor = 0;
+  for (const r of raw) {
+    const w = r.width / total;
+    out.push({ ...r, width: w, start: cursor, end: cursor + w });
+    cursor += w;
+  }
+  if (out.length > 0) out[out.length - 1].end = 1; // 防浮点漂移
+  return out;
 }
 
-/** 节奏逻辑仍用 start/end；数值与 SCROLL_RHYTHM_SEGMENTS 同源 */
-export const RHYTHM_CONFIG = {
-  hold1: segmentBounds('hold1'),
-  trans1to2: segmentBounds('trans1to2'),
-  hold2: segmentBounds('hold2'),
-  trans2to3: segmentBounds('trans2to3'),
-  hold3: segmentBounds('hold3'),
-} as const;
+export const SCROLL_RHYTHM_SEGMENTS: readonly RhythmSegment[] = buildSegments(SCREENS);
 
-/** 总滚动距离：约 5 屏高走完叙事 */
-export const SCROLL_CONTROL_PAGES = 5;
+/** 滚动总距离:屏数越多,留给阅读和过场的距离越长 */
+export const SCROLL_CONTROL_PAGES = Math.max(5, Math.round(SCREENS.length * 1.5));
+
+function findSegmentById(id: string) {
+  return SCROLL_RHYTHM_SEGMENTS.find((s) => s.id === id);
+}
+
+/** 向后兼容:保留原 3 屏 keys 的访问入口 */
+export const RHYTHM_CONFIG = {
+  hold1: { start: findSegmentById('hold1')?.start ?? 0, end: findSegmentById('hold1')?.end ?? 0 },
+  trans1to2: { start: findSegmentById('trans1to2')?.start ?? 0, end: findSegmentById('trans1to2')?.end ?? 0 },
+  hold2: { start: findSegmentById('hold2')?.start ?? 0, end: findSegmentById('hold2')?.end ?? 0 },
+  trans2to3: { start: findSegmentById('trans2to3')?.start ?? 0, end: findSegmentById('trans2to3')?.end ?? 0 },
+  hold3: { start: findSegmentById('hold3')?.start ?? 0, end: findSegmentById('hold3')?.end ?? 0 },
+} as const;
 
 const OFF_BOTTOM_VH = 100;
 const OFF_TOP_VH = -100;
 
-/** 屏 1 停留定稿值(勿改) */
 export const MOON_HOLD1 = { positionX: -5, positionY: -13, sizePx: 680, sizeVh: 0, opacity: 1 };
-/** 屏 2 停留：右上角挂月(建议值) */
 export const MOON_HOLD2 = { positionX: 32, positionY: -32, sizePx: 200, sizeVh: 0, opacity: 1 };
-/** 屏 3 停留：月成为环境,充满视口 */
 export const MOON_HOLD3 = { positionX: 0, positionY: 0, sizePx: 0, sizeVh: 200, opacity: 1 };
 
-/** 屏 3 暖月底色:与月盘 #f4ead5 同色相、略深,避免 #e8dcb8 偏绿 */
 export const SCREEN3_AMBIENT_BG = '#ede1c0';
 
 export type MoonState = typeof MOON_HOLD1;
-
 export type RhythmPhase = 'hold' | 'transition';
 
 export type RhythmState = {
   phase: RhythmPhase;
-  /** 停留区 = 该屏；过场区 = 上一屏(切换完成前不换文案) */
   activeScreenIndex: number;
   i0: number;
   i1: number;
-  /** 屏间插值 0~1，过场区经 easeInOutCubic */
   t: number;
 };
 
 function clamp01(x: number) {
   return THREE.MathUtils.clamp(Number.isFinite(x) ? x : 0, 0, 1);
-}
-
-/** 当前 scroll.offset 落在哪一段（与 getRhythmState 边界一致） */
-export function getRhythmSegmentAt(scrollOffset: number): RhythmSegment {
-  const o = clamp01(scrollOffset);
-  const segs = SCROLL_RHYTHM_SEGMENTS;
-  for (let i = 0; i < segs.length; i++) {
-    const seg = segs[i];
-    if (o < seg.end || (i === segs.length - 1 && o <= seg.end)) return seg;
-  }
-  return segs[segs.length - 1];
 }
 
 export function easeInOutCubic(t: number) {
@@ -135,28 +122,6 @@ function segmentLocal(offset: number, start: number, end: number) {
   return clamp01((offset - start) / (end - start));
 }
 
-/** 模型走位用的屏索引与插值 t */
-export function getRhythmState(scrollOffset: number): RhythmState {
-  const o = clamp01(scrollOffset);
-  const c = RHYTHM_CONFIG;
-
-  if (o < c.hold1.end) {
-    return { phase: 'hold', activeScreenIndex: 0, i0: 0, i1: 0, t: 0 };
-  }
-  if (o < c.trans1to2.end) {
-    const t = easeInOutCubic(segmentLocal(o, c.trans1to2.start, c.trans1to2.end));
-    return { phase: 'transition', activeScreenIndex: 0, i0: 0, i1: 1, t };
-  }
-  if (o < c.hold2.end) {
-    return { phase: 'hold', activeScreenIndex: 1, i0: 1, i1: 1, t: 0 };
-  }
-  if (o < c.trans2to3.end) {
-    const t = easeInOutCubic(segmentLocal(o, c.trans2to3.start, c.trans2to3.end));
-    return { phase: 'transition', activeScreenIndex: 1, i0: 1, i1: 2, t };
-  }
-  return { phase: 'hold', activeScreenIndex: 2, i0: 2, i1: 2, t: 0 };
-}
-
 function lerpMoon(a: MoonState, b: MoonState, t: number): MoonState {
   return {
     positionX: THREE.MathUtils.lerp(a.positionX, b.positionX, t),
@@ -167,45 +132,90 @@ function lerpMoon(a: MoonState, b: MoonState, t: number): MoonState {
   };
 }
 
-/**
- * 月亮叙事链 → 背景分工(勿混用)
- * | 滚动段   | 月亮 DOM z=30 | Canvas (z=100)     | 整页 DOM z=5      |
- * | 屏1停留  | 大月          | null               | 深靛(page.tsx)    |
- * | 1→2过场  | 缩至角        | null               | 深靛              |
- * | 屏2停留  | 角月          | null               | 深靛              |
- * | 2→3过场  | 扩大满屏      | null(必透明!)      | 深靛→暖月 lerp    |
- * | 屏3停留  | 充满融合      | 暖月色(与月无缝)   | 暖月色            |
- */
-
-/** 整页底色 0=深靛 1=暖月:仅 trans2to3 起 lerp(IntroMoonLayer),不驱动 Canvas */
-export function getPageAmbientBgMix(scrollOffset: number): number {
+export function getRhythmSegmentAt(scrollOffset: number): RhythmSegment {
   const o = clamp01(scrollOffset);
-  const c = RHYTHM_CONFIG;
-  if (o < c.trans2to3.start) return 0;
-  if (o < c.trans2to3.end) {
-    return easeInOutCubic(segmentLocal(o, c.trans2to3.start, c.trans2to3.end));
+  const segs = SCROLL_RHYTHM_SEGMENTS;
+  for (let i = 0; i < segs.length; i++) {
+    const seg = segs[i];
+    if (o < seg.end || (i === segs.length - 1 && o <= seg.end)) return seg;
   }
-  return 1;
+  return segs[segs.length - 1];
 }
 
-/** 屏3停留:Canvas 铺暖月色;2→3 过场期间必须为 false */
+export function getRhythmState(scrollOffset: number): RhythmState {
+  const seg = getRhythmSegmentAt(scrollOffset);
+  if (seg.kind === 'hold') {
+    return { phase: 'hold', activeScreenIndex: seg.fromScreen, i0: seg.fromScreen, i1: seg.fromScreen, t: 0 };
+  }
+  const t = easeInOutCubic(segmentLocal(scrollOffset, seg.start, seg.end));
+  // 过场中文案归属上一屏(切完才换)
+  return { phase: 'transition', activeScreenIndex: seg.fromScreen, i0: seg.fromScreen, i1: seg.toScreen, t };
+}
+
+export function getTextScrollYVh(screenIndex: number, scrollOffset: number): number {
+  const segs = SCROLL_RHYTHM_SEGMENTS;
+  const o = clamp01(scrollOffset);
+
+  const holdIdx = segs.findIndex((s) => s.kind === 'hold' && s.fromScreen === screenIndex);
+  if (holdIdx === -1) return 0;
+  const hold = segs[holdIdx];
+  const prevTrans = holdIdx > 0 ? segs[holdIdx - 1] : null;
+  const nextTrans = holdIdx < segs.length - 1 ? segs[holdIdx + 1] : null;
+
+  if (prevTrans && o < prevTrans.start) return OFF_BOTTOM_VH;
+  if (prevTrans && o < prevTrans.end) {
+    const t = easeInOutCubic(segmentLocal(o, prevTrans.start, prevTrans.end));
+    return THREE.MathUtils.lerp(OFF_BOTTOM_VH, 0, t);
+  }
+  if (o < hold.end) return 0;
+  if (nextTrans && o < nextTrans.end) {
+    const t = easeInOutCubic(segmentLocal(o, nextTrans.start, nextTrans.end));
+    return THREE.MathUtils.lerp(0, OFF_TOP_VH, t);
+  }
+  return OFF_TOP_VH;
+}
+
+/** 月亮:维持原 1→2→3 编排;屏 3 及之后统一 HOLD3(暂时处理) */
+export function getMoonState(scrollOffset: number, inspectMode: boolean): MoonState {
+  if (inspectMode) return { ...MOON_HOLD2, opacity: 0 };
+
+  const seg = getRhythmSegmentAt(scrollOffset);
+  const t = easeInOutCubic(segmentLocal(scrollOffset, seg.start, seg.end));
+
+  if (seg.kind === 'hold') {
+    if (seg.fromScreen === 0) return MOON_HOLD1;
+    if (seg.fromScreen === 1) return MOON_HOLD2;
+    return MOON_HOLD3;
+  }
+  if (seg.fromScreen === 0 && seg.toScreen === 1) return lerpMoon(MOON_HOLD1, MOON_HOLD2, t);
+  if (seg.fromScreen === 1 && seg.toScreen === 2) return lerpMoon(MOON_HOLD2, MOON_HOLD3, t);
+  return MOON_HOLD3;
+}
+
+export function getPageAmbientBgMix(scrollOffset: number): number {
+  const seg = getRhythmSegmentAt(scrollOffset);
+  if (seg.kind === 'trans' && seg.fromScreen === 1 && seg.toScreen === 2) {
+    return easeInOutCubic(segmentLocal(scrollOffset, seg.start, seg.end));
+  }
+  if (seg.fromScreen >= 2) return 1;
+  return 0;
+}
+
 export function isScreen3CanvasWarmHold(scrollOffset: number): boolean {
-  return clamp01(scrollOffset) >= RHYTHM_CONFIG.hold3.start;
+  const seg = getRhythmSegmentAt(scrollOffset);
+  return seg.fromScreen >= 2 && seg.kind === 'hold';
 }
 
-/** Canvas 透明以露出身后月亮(含 2→3 过场扩大动画) */
 export function shouldCanvasBeTransparent(scrollOffset: number, inspectMode: boolean): boolean {
   if (inspectMode) return false;
   if (getIntroScreenFade(scrollOffset, false) > 0.02) return true;
   return !isScreen3CanvasWarmHold(scrollOffset);
 }
 
-/** 1=角月光晕,0=屏3无边界光晕 */
 export function getMoonGlowMix(scrollOffset: number): number {
   return 1 - getPageAmbientBgMix(scrollOffset);
 }
 
-/** 屏 1 径向夜空：随 1→2 过场淡出(月亮仍连续位移) */
 export function getIntroScreenFade(scrollOffset: number, inspectMode: boolean): number {
   if (inspectMode) return 0;
   const { i0, i1, t } = getRhythmState(scrollOffset);
@@ -213,59 +223,3 @@ export function getIntroScreenFade(scrollOffset: number, inspectMode: boolean): 
   if (i0 === 0 && i1 === 1) return 1 - t;
   return 0;
 }
-
-/** 叙事文字卷轴 Y 偏移(vh):正=下移,负=上移 */
-export function getTextScrollYVh(screenIndex: number, scrollOffset: number): number {
-  const o = clamp01(scrollOffset);
-  const c = RHYTHM_CONFIG;
-
-  if (screenIndex === 0) {
-    if (o < c.hold1.end) return 0;
-    if (o < c.trans1to2.end) {
-      const t = easeInOutCubic(segmentLocal(o, c.trans1to2.start, c.trans1to2.end));
-      return THREE.MathUtils.lerp(0, OFF_TOP_VH, t);
-    }
-    return OFF_TOP_VH;
-  }
-
-  if (screenIndex === 1) {
-    if (o < c.trans1to2.start) return OFF_BOTTOM_VH;
-    if (o < c.trans1to2.end) {
-      const t = easeInOutCubic(segmentLocal(o, c.trans1to2.start, c.trans1to2.end));
-      return THREE.MathUtils.lerp(OFF_BOTTOM_VH, 0, t);
-    }
-    if (o < c.hold2.end) return 0;
-    if (o < c.trans2to3.end) {
-      const t = easeInOutCubic(segmentLocal(o, c.trans2to3.start, c.trans2to3.end));
-      return THREE.MathUtils.lerp(0, OFF_TOP_VH, t);
-    }
-    return OFF_TOP_VH;
-  }
-
-  if (o < c.trans2to3.start) return OFF_BOTTOM_VH;
-  if (o < c.trans2to3.end) {
-    const t = easeInOutCubic(segmentLocal(o, c.trans2to3.start, c.trans2to3.end));
-    return THREE.MathUtils.lerp(OFF_BOTTOM_VH, 0, t);
-  }
-  return 0;
-}
-
-/** 月亮贯穿三屏:屏1大月 → 屏2角月 → 屏3月成为环境 */
-export function getMoonState(scrollOffset: number, inspectMode: boolean): MoonState {
-  if (inspectMode) return { ...MOON_HOLD2, opacity: 0 };
-  const o = clamp01(scrollOffset);
-  const c = RHYTHM_CONFIG;
-
-  if (o < c.hold1.end) return MOON_HOLD1;
-  if (o < c.trans1to2.end) {
-    const t = easeInOutCubic(segmentLocal(o, c.trans1to2.start, c.trans1to2.end));
-    return lerpMoon(MOON_HOLD1, MOON_HOLD2, t);
-  }
-  if (o < c.hold2.end) return MOON_HOLD2;
-  if (o < c.trans2to3.end) {
-    const t = easeInOutCubic(segmentLocal(o, c.trans2to3.start, c.trans2to3.end));
-    return lerpMoon(MOON_HOLD2, MOON_HOLD3, t);
-  }
-  return MOON_HOLD3;
-}
-
