@@ -109,3 +109,5 @@ P0 文物是 Nelson-Atkins Museum 的辽/金代水月观音木雕。
 - 优先给我能 copy-paste 直接用的东西,而不是"几种方案让你选"
 - 一次只让我做一件事,不要列长任务清单
 - 出问题时先给 fix,再解释 why(不要先讲半页原理)
+drei <ScrollControls damping={0.25}> 架构,不引入 Lenis,不改回原生 scroll + sticky
+ScrollNarrativeDomSync / ScreenTextLayer / narrativeDomRefs 是必要结构,不"简化"
