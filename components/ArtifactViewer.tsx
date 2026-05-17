@@ -84,6 +84,17 @@ function IntroSkyBackdrop({ inspectMode }: { inspectMode: boolean }) {
   return null;
 }
 
+function CameraModeSync({ inspectMode }: { inspectMode: boolean }) {
+  const camera = useThree((s) => s.camera);
+
+  useEffect(() => {
+    camera.position.set(0, 0, inspectMode ? 8 : 5);
+    camera.lookAt(0, 0, 0);
+  }, [camera, inspectMode]);
+
+  return null;
+}
+
 export type ArtifactViewerAnimation = 'breathe' | 'rotate' | 'static';
 
 export type ArtifactViewerCameraLimits = {
@@ -230,11 +241,12 @@ export default function ArtifactViewer({
       >
         <Canvas
           className="h-full w-full"
-          camera={{ position: [2.8, 1.8, 2.8], fov: 45 }}
+          camera={{ position: [0, 0, 5], fov: 35 }}
           gl={{ alpha: true, toneMappingExposure: 1.15 }}
         >
         <ScrollControls pages={SCROLL_CONTROL_PAGES} damping={0.25}>
           {/* <LenisScrollBridge enabled={!inspectMode} /> */}
+          <CameraModeSync inspectMode={inspectMode} />
           <IntroSkyBackdrop inspectMode={inspectMode} />
           <ambientLight intensity={0.6} />
           <hemisphereLight args={['#f4f4f5', '#3f3f46', 0.45]} />

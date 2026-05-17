@@ -54,21 +54,21 @@ export type Screen = {
 };
 
 const introDesktop: ScreenModelState = {
-  position: [-2.90, -0.30, -1.20],
+  position: [0, 0, 0],
   scale: 0.10,
   rotation: [0, 0, 0],
   modelVisible: true,
 };
 
 const dongfangDesktop: ScreenModelState = {
-  position: [-2.1, 0.05, 0.6],
+  position: [0, 0, 0],
   scale: 0.10,
   rotation: [0, 0, 0],
   modelVisible: true,
 };
 
 const atEaseDesktop: ScreenModelState = {
-  position: [0.9, -0.1, 0],
+  position: [0, 0, 0],
   scale: 0.10,
   rotation: [0, 0, 0],
   modelVisible: true,
@@ -112,7 +112,7 @@ const detailLabelsText: ScreenText = {
 };
 
 const notTwoDesktop: ScreenModelState = {
-  position: [0.1, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
+  position: [0, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const notTwoText: ScreenText = {
   placement: 'model-right',
@@ -133,7 +133,7 @@ const aigcSaplingText: ScreenText = {
 };
 
 const aigcTreeDesktop: ScreenModelState = {
-  position: [0, -0.05, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
+  position: [0, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const aigcTreeText: ScreenText = {
   placement: 'below-model',
@@ -143,7 +143,7 @@ const aigcTreeText: ScreenText = {
 };
 
 const yimuzaoDesktop: ScreenModelState = {
-  position: [0.1, 0.05, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
+  position: [0, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const yimuzaoText: ScreenText = {
   placement: 'model-right',
@@ -153,7 +153,7 @@ const yimuzaoText: ScreenText = {
 };
 
 const yimuzaoRipplesDesktop: ScreenModelState = {
-  position: [-0.05, -0.1, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
+  position: [0, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const yimuzaoRipplesText: ScreenText = {
   placement: 'below-model',
@@ -163,7 +163,7 @@ const yimuzaoRipplesText: ScreenText = {
 };
 
 const lossHistoryDesktop: ScreenModelState = {
-  position: [-1.8, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
+  position: [0, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const lossHistoryText: ScreenText = {
   placement: 'model-right',
@@ -202,7 +202,7 @@ export const SCREENS: Screen[] = [
     holdWidth: 0.03,
     transitionWidth: 0.25,
     bgMode: 'dark',
-    moonState: { positionX: -13, positionY: -8, sizePx: 580, sizeVh: 0, opacity: 0.85 },
+    moonState: { positionX: 0, positionY: 0, sizePx: 580, sizeVh: 0, opacity: 0.85 },
   },
   {
     id: 'detail-labels',
@@ -223,7 +223,7 @@ export const SCREENS: Screen[] = [
       { id: 'taLian', text: '踏莲',         labelPos: { x: 70, y: 72 }, anchorPos: { x: 53, y: 72 } },
     ],
     bgMode: 'dark',
-    moonState: { positionX: 32, positionY: -32, sizePx: 200, sizeVh: 0, opacity: 1 },
+    moonState: { positionX: 0, positionY: 0, sizePx: 200, sizeVh: 0, opacity: 1 },
   },
   {
     id: 'dongfang-guanyin',
@@ -234,7 +234,7 @@ export const SCREENS: Screen[] = [
     holdWidth: 0.20,
     transitionWidth: 0.25,
     bgMode: 'dark',
-    moonState: { positionX: -28, positionY: 20, sizePx: 280, sizeVh: 0, opacity: 0.95 },
+    moonState: { positionX: 0, positionY: 0, sizePx: 280, sizeVh: 0, opacity: 0.95 },
   },
   {
     id: 'at-ease',
@@ -244,12 +244,12 @@ export const SCREENS: Screen[] = [
     text: atEaseText,
     holdWidth: 0.27,
     bgMode: 'dark',
-    moonState: { positionX: -15, positionY: -8, sizePx: 520, sizeVh: 0, opacity: 1 },
+    moonState: { positionX: 0, positionY: 0, sizePx: 520, sizeVh: 0, opacity: 1 },
   },
   { id: 'not-two', name: '不二',
     desktop: notTwoDesktop, mobile: { ...notTwoDesktop }, text: notTwoText,
     bgMode: 'dark',
-    moonState: { positionX: 0, positionY: -25, sizePx: 280, sizeVh: 0, opacity: 0.9 } },
+    moonState: { positionX: 0, positionY: 0, sizePx: 280, sizeVh: 0, opacity: 0.9 } },
   { id: 'aigc-sapling', name: '一木造·树苗',
     desktop: aigcSaplingDesktop, mobile: { ...aigcSaplingDesktop }, text: aigcSaplingText,
     bgMode: 'warm',
@@ -261,7 +261,7 @@ export const SCREENS: Screen[] = [
   { id: 'yimuzao', name: '一木造',
     desktop: yimuzaoDesktop, mobile: { ...yimuzaoDesktop }, text: yimuzaoText,
     bgMode: 'dark',
-    moonState: { positionX: 32, positionY: -32, sizePx: 200, sizeVh: 0, opacity: 1 } },
+    moonState: { positionX: 0, positionY: 0, sizePx: 200, sizeVh: 0, opacity: 1 } },
   { id: 'yimuzao-ripples', name: '一木造·涟漪',
     desktop: yimuzaoRipplesDesktop, mobile: { ...yimuzaoRipplesDesktop }, text: yimuzaoRipplesText,
     bgMode: 'dark' },
