@@ -20,12 +20,6 @@ import { ScrollDebuggerPanel, ScrollDebuggerSync } from '@/components/ScrollDebu
 // import { LenisScrollBridge } from '@/components/LenisScrollBridge';
 import { ScrollNarrativeDomSync } from '@/components/ScrollNarrativeDomSync';
 import { DetailLabelsLayer, DetailLabelsSync, type DetailLabelsLayerHandle } from '@/components/DetailLabelsLayer';
-import { DirectorMode, DirectorModeSync } from '@/components/DirectorMode';
-import {
-  AtmosphereLayer,
-  AtmosphereSync,
-  type AtmosphereLayerHandle,
-} from '@/components/AtmosphereLayer';
 import { ScreenTextLayer } from '@/components/ScreenTextLayer';
 import { SCREENS } from '@/lib/screens';
 import { getParallaxOffsetWorld } from '@/lib/parallax';
@@ -214,7 +208,6 @@ export default function ArtifactViewer({
     [],
   );
   const detailLabelsRef = useRef<DetailLabelsLayerHandle | null>(null);
-  const atmosphereRef = useRef<AtmosphereLayerHandle | null>(null);
 
   useEffect(() => {
     void useGLTF.preload(modelUrl);
@@ -224,10 +217,8 @@ export default function ArtifactViewer({
     <>
       <ScrollDebuggerPanel line1Ref={scrollDbgLine1Ref} line2Ref={scrollDbgLine2Ref} />
       <IntroMoonLayer refs={moonRefs.current} />
-      <AtmosphereLayer ref={atmosphereRef} />
       <ScreenTextLayer blockRefs={textBlockRefs} inspectMode={inspectMode} />
       <DetailLabelsLayer ref={detailLabelsRef} />
-      <DirectorMode />
       {/* 月亮 z=30 < Canvas z=100 < 文字 z=1000；查看3D z=800 */}
       <div
         className="relative h-full w-full"
@@ -268,8 +259,6 @@ export default function ArtifactViewer({
             inspectMode={inspectMode}
           />
           <DetailLabelsSync layerRef={detailLabelsRef} inspectMode={inspectMode} />
-          <AtmosphereSync layerRef={atmosphereRef} />
-          <DirectorModeSync />
           <OrbitControls
             makeDefault
             // 叙事模式:编排阶段临时解除角度限制,定稿后恢复下方注释

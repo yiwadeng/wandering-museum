@@ -17,7 +17,6 @@ import {
   getMoonGlowMix,
   getMoonState,
   getPageAmbientBgMix,
-  getRhythmState,
   getTextScrollYVh,
   SCREEN3_AMBIENT_BG,
 } from '@/lib/scrollRhythm';
@@ -59,8 +58,6 @@ function updateMoonDom(refs: MoonDomRefs, offset: number, inspectMode: boolean) 
   const skyFade = getIntroScreenFade(offset, inspectMode);
   const moon = getMoonState(offset, inspectMode);
   const glowMix = inspectMode ? 0 : getMoonGlowMix(offset);
-  const activeScreenIndex = getRhythmState(offset).activeScreenIndex;
-  const moonStyle = SCREENS[activeScreenIndex]?.moonStyle ?? 'solid';
 
   const ambient = refs.ambient.current;
   if (ambient) {
@@ -92,8 +89,7 @@ function updateMoonDom(refs: MoonDomRefs, offset: number, inspectMode: boolean) 
       moonEl.style.width = moonSizeCss(moon);
       moonEl.style.height = moonSizeCss(moon);
       moonEl.style.opacity = String(moon.opacity);
-      moonEl.style.boxShadow = moonStyle === 'particle' ? 'none' : moonGlowBoxShadow(glowMix);
-      moonEl.dataset.moonStyle = moonStyle;
+      moonEl.style.boxShadow = moonGlowBoxShadow(glowMix);
     } else {
       moonEl.style.display = 'none';
     }

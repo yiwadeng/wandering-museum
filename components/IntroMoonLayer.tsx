@@ -2,7 +2,6 @@
 
 import type { CSSProperties } from 'react';
 import type { MoonDomRefs } from '@/components/narrativeDomRefs';
-import { ParticleMoon } from '@/components/ParticleMoon';
 
 /** 温润米白圆月 */
 export const INTRO_MOON_COLOR = '#f4ead5';
@@ -49,22 +48,11 @@ export function IntroMoonLayer({ refs }: { refs: MoonDomRefs }) {
           top: '50%',
           transform: 'translate(-50%, -50%)',
           borderRadius: '50%',
+          background: INTRO_MOON_COLOR,
           zIndex: Z_MOON,
           display: 'none',
         }}
-      >
-        <div
-          className="wm-solid-moon"
-          style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: INTRO_MOON_COLOR }}
-        />
-        <div className="wm-particle-moon" style={{ width: '100%', height: '100%', display: 'none' }}>
-          <ParticleMoon />
-        </div>
-      </div>
-      <style>{`
-        [data-moon-style='particle'] .wm-solid-moon { display: none; }
-        [data-moon-style='particle'] .wm-particle-moon { display: block !important; }
-      `}</style>
+      />
     </>
   );
 }
