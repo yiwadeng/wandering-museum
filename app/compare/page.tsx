@@ -1,7 +1,7 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { Environment, OrbitControls, useGLTF } from '@react-three/drei';
+import { Center, Environment, OrbitControls, useGLTF } from '@react-three/drei';
 import { Suspense } from 'react';
 
 type ViewerProps = {
@@ -13,7 +13,11 @@ type ViewerProps = {
 function Model({ modelUrl }: { modelUrl: string }) {
   const { scene } = useGLTF(modelUrl, true);
 
-  return <primitive object={scene} scale={0.2} />;
+  return (
+    <Center>
+      <primitive object={scene} scale={0.2} />
+    </Center>
+  );
 }
 
 function CompareViewer({ modelUrl, label, size }: ViewerProps) {
@@ -32,7 +36,7 @@ function CompareViewer({ modelUrl, label, size }: ViewerProps) {
           <Model modelUrl={modelUrl} />
           <Environment preset="sunset" />
         </Suspense>
-        <OrbitControls />
+        <OrbitControls target={[0, 0, 0]} />
       </Canvas>
     </section>
   );
@@ -41,9 +45,9 @@ function CompareViewer({ modelUrl, label, size }: ViewerProps) {
 export default function ComparePage() {
   return (
     <main className="fixed inset-0 grid grid-cols-2 bg-[#0a0b1a]">
-      <CompareViewer modelUrl="/models/watermoon_jianmian_final.glb" label="原版" size="16MB" />
+      <CompareViewer modelUrl="/models/watermoon_final_518.glb" label="原版" size="15.99 MB" />
       <div className="pointer-events-none absolute inset-y-0 left-1/2 z-20 w-px bg-zinc-600" />
-      <CompareViewer modelUrl="/models/watermoon_draco_hq.glb" label="Draco 高精度" size="10.67 MB" />
+      <CompareViewer modelUrl="/models/watermoon_final_518_draco.glb" label="Draco 压缩" size="10.67 MB" />
     </main>
   );
 }

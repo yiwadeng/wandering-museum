@@ -5,8 +5,8 @@ import ArtifactViewer from '@/components/ArtifactViewer';
 import { Model3DViewer } from '@/components/Model3DViewer';
 import { NIGHT_BASE } from '@/lib/introScroll';
 
-const MODEL_URL = '/models/watermoon_draco_hq.glb';
-const MODEL_ROTATION: [number, number, number] = [0.55, 0.05, -0.35];
+const MODEL_URL = '/models/watermoon_final_518_draco.glb';
+const MODEL_ROTATION: [number, number, number] = [0, 0, 0];
 
 export default function Home() {
   const [inspectMode, setInspectMode] = useState(false);
@@ -44,7 +44,7 @@ export default function Home() {
           查看 3D 模型
         </button>
       ) : null}
-      <Model3DViewer isOpen={inspectMode} onClose={closeInspect} />
+      <Model3DViewer isOpen={inspectMode} onClose={closeInspect} rotation={MODEL_ROTATION} />
     </div>
   );
 }

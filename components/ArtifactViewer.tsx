@@ -138,7 +138,7 @@ function WatermoonModel({
     if (inspectMode) {
       const breatheY = animation === 'breathe' ? Math.sin(state.clock.elapsedTime * 1.5) * 0.05 : 0;
       g.position.set(0, breatheY, 0);
-      g.rotation.set(rotation[0], rotation[1], rotation[2]);
+      g.rotation.set(0, 0, 0);
       if (animation === 'rotate') {
         g.rotation.y += delta * rotationSpeed;
       }
@@ -167,7 +167,7 @@ function WatermoonModel({
     g.position.y = py + breatheY + parallaxY;
     g.position.z = pz;
 
-    g.rotation.set(rotation[0] + rx, rotation[1] + ry, rotation[2] + rz);
+    g.rotation.set(rx, ry, rz);
     if (animation === 'rotate') {
       g.rotation.y += delta * rotationSpeed;
     }
@@ -178,7 +178,9 @@ function WatermoonModel({
   return (
     <group ref={groupRef}>
       <Center>
-        <primitive object={scene} />
+        <group rotation={rotation}>
+          <primitive object={scene} />
+        </group>
       </Center>
     </group>
   );
@@ -234,8 +236,9 @@ export default function ArtifactViewer({
         <ScrollControls pages={SCROLL_CONTROL_PAGES} damping={0.25}>
           {/* <LenisScrollBridge enabled={!inspectMode} /> */}
           <IntroSkyBackdrop inspectMode={inspectMode} />
-          <ambientLight intensity={0.55} />
+          <ambientLight intensity={0.6} />
           <hemisphereLight args={['#f4f4f5', '#3f3f46', 0.45]} />
+          <directionalLight position={[2, 4, 5]} intensity={0.8} castShadow={false} />
           <directionalLight position={[4, 8, 5]} intensity={1.6} />
           <Suspense
             fallback={
@@ -264,7 +267,8 @@ export default function ArtifactViewer({
           <DirectorModeSync />
           <OrbitControls
             makeDefault
-            // 叙事模式:编排阶段临时解除角度限制,定稿后恢复下方注释
+            target={[0, 0, 0]}
+            // TODO: Phase 2 完成滚动叙事后重新启用,限制视角范围
             // 水平旋转范围：左右各 75°，防止用户拖到背面破洞
             // minAzimuthAngle={cameraLimits.azimuth.min}
             // maxAzimuthAngle={cameraLimits.azimuth.max}

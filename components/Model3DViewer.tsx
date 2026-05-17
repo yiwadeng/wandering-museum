@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 type Model3DViewerProps = {
   isOpen: boolean;
   onClose: () => void;
+  rotation: [number, number, number];
 };
 
 const Z_BACKDROP = 500;

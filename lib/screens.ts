@@ -54,23 +54,23 @@ export type Screen = {
 };
 
 const introDesktop: ScreenModelState = {
-  position: [0.35, -1.05, 1.10],
-  scale: 0.16,
-  rotation: [-1.24, 0.38, 0.50],
+  position: [-2.90, -0.30, -1.20],
+  scale: 0.10,
+  rotation: [0, 0, 0],
   modelVisible: true,
 };
 
 const dongfangDesktop: ScreenModelState = {
   position: [-2.1, 0.05, 0.6],
-  scale: 0.12,
-  rotation: [-0.2, 1.0, -0.3],
+  scale: 0.10,
+  rotation: [0, 0, 0],
   modelVisible: true,
 };
 
 const atEaseDesktop: ScreenModelState = {
   position: [0.9, -0.1, 0],
-  scale: 0.14,
-  rotation: [-0.1, -0.5, 0.55],
+  scale: 0.10,
+  rotation: [0, 0, 0],
   modelVisible: true,
 };
 
@@ -102,7 +102,7 @@ const atEaseText: ScreenText = {
 };
 
 const detailLabelsDesktop: ScreenModelState = {
-  position: [0, 0, 0], scale: 0.15, rotation: [-0.2, 0.05, 0.1], modelVisible: true,
+  position: [0, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const detailLabelsText: ScreenText = {
   placement: 'below-model',
@@ -112,7 +112,7 @@ const detailLabelsText: ScreenText = {
 };
 
 const notTwoDesktop: ScreenModelState = {
-  position: [0.1, 0, 0], scale: 0.13, rotation: [0, 0, 0], modelVisible: true,
+  position: [0.1, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const notTwoText: ScreenText = {
   placement: 'model-right',
@@ -123,7 +123,7 @@ const notTwoText: ScreenText = {
 };
 
 const aigcSaplingDesktop: ScreenModelState = {
-  position: [0, 0, 0], scale: 0.05, rotation: [0, 0, 0], modelVisible: false,
+  position: [0, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: false,
 };
 const aigcSaplingText: ScreenText = {
   placement: 'below-model',
@@ -133,7 +133,7 @@ const aigcSaplingText: ScreenText = {
 };
 
 const aigcTreeDesktop: ScreenModelState = {
-  position: [0, -0.05, 0], scale: 0.14, rotation: [-0.1, 0, 0.1], modelVisible: true,
+  position: [0, -0.05, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const aigcTreeText: ScreenText = {
   placement: 'below-model',
@@ -143,7 +143,7 @@ const aigcTreeText: ScreenText = {
 };
 
 const yimuzaoDesktop: ScreenModelState = {
-  position: [0.1, 0.05, 0], scale: 0.13, rotation: [-0.1, 0.1, 0.2], modelVisible: true,
+  position: [0.1, 0.05, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const yimuzaoText: ScreenText = {
   placement: 'model-right',
@@ -153,7 +153,7 @@ const yimuzaoText: ScreenText = {
 };
 
 const yimuzaoRipplesDesktop: ScreenModelState = {
-  position: [-0.05, -0.1, 0], scale: 0.15, rotation: [-0.3, 0.1, 0.3], modelVisible: true,
+  position: [-0.05, -0.1, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const yimuzaoRipplesText: ScreenText = {
   placement: 'below-model',
@@ -163,7 +163,7 @@ const yimuzaoRipplesText: ScreenText = {
 };
 
 const lossHistoryDesktop: ScreenModelState = {
-  position: [-1.8, 0, 0], scale: 0.08, rotation: [0, 0.3, 0], modelVisible: true,
+  position: [-1.8, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const lossHistoryText: ScreenText = {
   placement: 'model-right',
@@ -173,7 +173,7 @@ const lossHistoryText: ScreenText = {
 };
 
 const nelsonTempleDesktop: ScreenModelState = {
-  position: [0, 0, 0], scale: 0.13, rotation: [0, 0, 0], modelVisible: true,
+  position: [0, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: true,
 };
 const nelsonTempleText: ScreenText = {
   placement: 'below-model',
@@ -183,7 +183,7 @@ const nelsonTempleText: ScreenText = {
 };
 
 const postscriptDesktop: ScreenModelState = {
-  position: [0, 0, 0], scale: 0.05, rotation: [0, 0, 0], modelVisible: false,
+  position: [0, 0, 0], scale: 0.10, rotation: [0, 0, 0], modelVisible: false,
 };
 const postscriptText: ScreenText = {
   placement: 'below-model',
@@ -202,7 +202,7 @@ export const SCREENS: Screen[] = [
     holdWidth: 0.03,
     transitionWidth: 0.25,
     bgMode: 'dark',
-    moonState: { positionX: -16, positionY: -8, sizePx: 640, sizeVh: 0, opacity: 0.85 },
+    moonState: { positionX: -13, positionY: -8, sizePx: 580, sizeVh: 0, opacity: 0.85 },
   },
   {
     id: 'detail-labels',
