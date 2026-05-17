@@ -54,9 +54,9 @@ export type Screen = {
 };
 
 const introDesktop: ScreenModelState = {
-  position: [-0.85, -0.80, 0.35],
-  scale: 0.22,
-  rotation: [-0.44, 0.32, 0.23],
+  position: [0.35, -1.05, 1.10],
+  scale: 0.16,
+  rotation: [-1.24, 0.38, 0.50],
   modelVisible: true,
 };
 

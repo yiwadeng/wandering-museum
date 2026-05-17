@@ -1,9 +1,9 @@
-/* 中文衬线字体 —— 思源宋体（Noto Serif SC）
-   如 Google Fonts 加载慢，可换成 https://fonts.font.im/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap
-   生产环境推荐用 next/font 替换此 @import。 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* 中文衬线字体 —— 思源宋体（Noto Serif SC）
+   如 Google Fonts 加载慢，可换成 https://fonts.font.im/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap
+   生产环境推荐用 next/font 替换此 @import。 */
 :root {
   --background: #ffffff;
   --foreground: #171717;

@@ -5,7 +5,7 @@ import ArtifactViewer from '@/components/ArtifactViewer';
 import { Model3DViewer } from '@/components/Model3DViewer';
 import { NIGHT_BASE } from '@/lib/introScroll';
 
-const MODEL_URL = '/models/watermoon_test.glb';
+const MODEL_URL = '/models/watermoon_draco_hq.glb';
 const MODEL_ROTATION: [number, number, number] = [0.55, 0.05, -0.35];
 
 export default function Home() {
