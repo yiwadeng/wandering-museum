@@ -1,8 +1,34 @@
+/* 中文衬线字体 —— 思源宋体（Noto Serif SC）
+   如 Google Fonts 加载慢，可换成 https://fonts.font.im/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap
+   生产环境推荐用 next/font 替换此 @import。 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* ─ 水月主题色 ─ */
+  --night-deep: #02050c;
+  --night-base: #060e1e;
+  --night-mid:  #0c1830;
+  --night-soft: #14223e;
+
+  --moon-warm: #faf1dc;
+  --moon-base: #f4ead5;
+  --moon-cool: #d4c79f;
+
+  --paper:       #faf9f6;
+  --paper-dim:   rgba(250, 249, 246, 0.86);
+  --paper-mute:  rgba(250, 249, 246, 0.62);
+  --paper-faint: rgba(250, 249, 246, 0.42);
+
+  /* 朱砂点睛 —— 用量极少 */
+  --vermillion:     #a13b2e;
+  --vermillion-dim: #7a2e26;
+
+  /* 字体栈 */
+  --font-serif-cjk: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "宋体", serif;
 }
 
 @theme inline {
@@ -22,5 +48,28 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* 原 Arial 替换为衬线，这是"产品感"消失的最大单点改动 */
+  font-family: var(--font-serif-cjk);
+  font-feature-settings: "palt" 1; /* 中文比例对齐，标点更紧 */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 屏 1 — 水面雾气动效（极慢的飘动） */
+.water-mist {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 100%,
+      rgba(244, 234, 213, 0.06) 0%,
+      rgba(244, 234, 213, 0.02) 45%,
+      transparent 70%),
+    linear-gradient(to top,
+      rgba(244, 234, 213, 0.04) 0%,
+      rgba(244, 234, 213, 0.012) 35%,
+      transparent 75%);
+  filter: blur(2px);
+  animation: water-drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes water-drift {
+  from { transform: translateY(0)    scaleX(1);    opacity: 0.82; }
+  to   { transform: translateY(-4px) scaleX(1.03); opacity: 1;    }
 }

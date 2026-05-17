@@ -14,7 +14,7 @@ export default function Home() {
   const closeInspect = useCallback(() => setInspectMode(false), []);
 
   return (
-    <div className="fixed inset-0 h-screen w-screen" style={{ background: NIGHT_BASE }}>
+    <div className="fixed inset-0 h-screen w-screen" style={{ background: NIGHT_BASE }} onContextMenu={(e) => e.preventDefault()}>
       <ArtifactViewer
         modelUrl={MODEL_URL}
         scale={0.2}

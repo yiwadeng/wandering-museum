@@ -69,36 +69,132 @@ function blockShellStyle(
   };
 }
 
+/** 解析【XX】value 形式的元信息行；不匹配则原样返回 */
+function parseLabeledLine(line: string): { label: string | null; value: string } {
+  const m = line.match(/^【(.+?)】\s*[:：]?\s*(.+)$/);
+  return m ? { label: m[1], value: m[2] } : { label: null, value: line };
+}
+
+const SERIF =
+  '"Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "宋体", serif';
+
 function IntroTextBlock({ text }: { text: ScreenText }) {
   return (
-    <>
+    <div style={{ fontFamily: SERIF }}>
+      {/* 引文 —— 一句话立气场。如果不想要，删掉这个 <p> 即可。 */}
+      <p
+        style={{
+          fontSize: 11,
+          color: 'rgba(250, 249, 246, 0.42)',
+          letterSpacing: '0.32em',
+          margin: '0 0 36px',
+          fontWeight: 300,
+        }}
+      >
+        千 江 有 水 千 江 月
+      </p>
+
       <h1
         style={{
-          fontSize: 30,
-          fontWeight: 600,
-          letterSpacing: '0.04em',
-          color: 'rgba(255, 250, 240, 0.95)',
-          margin: '0 0 22px',
+          fontFamily: SERIF,
+          fontSize: 34,
+          fontWeight: 500,
+          letterSpacing: '0.06em',
+          lineHeight: 1.5,
+          color: '#faf9f6',
+          margin: '0 0 16px',
         }}
       >
         {text.title}
       </h1>
+
+      {/* 朱砂细线 —— 整页唯一的彩色元素，要够细够短 */}
+      <span
+        aria-hidden
+        style={{
+          display: 'block',
+          width: 28,
+          height: 1,
+          background: '#a13b2e',
+          margin: '0 0 32px',
+        }}
+      />
+
       {text.lines ? (
-        <div style={{ marginBottom: 18 }}>
-          {text.lines.map((line, i) => (
-            <p key={i} style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.62)', lineHeight: 1.75, margin: 0 }}>
-              {line}
-            </p>
-          ))}
+        <div style={{ margin: '0 0 32px', display: 'grid', rowGap: 12 }}>
+          {text.lines.map((line, i) => {
+            const { label, value } = parseLabeledLine(line);
+            if (!label) {
+              return (
+                <p
+                  key={i}
+                  style={{
+                    margin: 0,
+                    fontSize: 13,
+                    color: 'rgba(250, 249, 246, 0.78)',
+                    lineHeight: 1.9,
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {value}
+                </p>
+              );
+            }
+            return (
+              <div
+                key={i}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '3.5em 1fr',
+                  columnGap: 16,
+                  alignItems: 'baseline',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: 'rgba(250, 249, 246, 0.42)',
+                    letterSpacing: '0.22em',
+                    fontWeight: 300,
+                  }}
+                >
+                  {label}
+                </span>
+                <span
+                  style={{
+                    fontSize: 14,
+                    color: 'rgba(250, 249, 246, 0.86)',
+                    letterSpacing: '0.02em',
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {value}
+                </span>
+              </div>
+            );
+          })}
         </div>
       ) : null}
+
       {text.body ? (
-        <p style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.78)', lineHeight: 1.85, margin: 0 }}>{text.body}</p>
+        <p
+          style={{
+            fontSize: 14,
+            color: 'rgba(250, 249, 246, 0.78)',
+            lineHeight: 2.05,
+            letterSpacing: '0.04em',
+            margin: 0,
+            textAlign: 'justify',
+          }}
+        >
+          {text.body}
+        </p>
       ) : null}
+
       {text.carouselPlaceholder ? (
         <p style={{ ...TYPE.meta, marginTop: '1.5rem', opacity: 0.7 }}>{text.carouselPlaceholder}</p>
       ) : null}
-    </>
+    </div>
   );
 }
 

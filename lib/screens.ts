@@ -54,9 +54,9 @@ export type Screen = {
 };
 
 const introDesktop: ScreenModelState = {
-  position: [-0.1, -0.1, 0],
-  scale: 0.16,
-  rotation: [-0.5, 0.15, 0.45],
+  position: [-0.85, -0.80, 0.35],
+  scale: 0.22,
+  rotation: [-0.44, 0.32, 0.23],
   modelVisible: true,
 };
 
@@ -202,7 +202,7 @@ export const SCREENS: Screen[] = [
     holdWidth: 0.03,
     transitionWidth: 0.25,
     bgMode: 'dark',
-    moonState: { positionX: -5, positionY: -13, sizePx: 680, sizeVh: 0, opacity: 1 },
+    moonState: { positionX: -16, positionY: -8, sizePx: 640, sizeVh: 0, opacity: 0.85 },
   },
   {
     id: 'detail-labels',
