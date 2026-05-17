@@ -47,6 +47,7 @@ export type Screen = {
   bgMode?: 'dark' | 'warm';
   /** 该屏月亮状态,不填该屏月亮隐藏 */
   moonState?: MoonState;
+  moonStyle?: 'solid' | 'particle';
   desktop: ScreenModelState;
   mobile: ScreenModelState;
   /** 无此字段或留空表示该屏不叠文字 */
@@ -54,9 +55,9 @@ export type Screen = {
 };
 
 const introDesktop: ScreenModelState = {
-  position: [-0.1, -0.1, 0],
-  scale: 0.16,
-  rotation: [-0.5, 0.15, 0.45],
+  position: [-1.05, -0.80, 0.35],
+  scale: 0.22,
+  rotation: [-0.44, 0.34, 0.23],
   modelVisible: true,
 };
 
@@ -202,7 +203,8 @@ export const SCREENS: Screen[] = [
     holdWidth: 0.03,
     transitionWidth: 0.25,
     bgMode: 'dark',
-    moonState: { positionX: -5, positionY: -13, sizePx: 680, sizeVh: 0, opacity: 1 },
+    moonState: { positionX: -16, positionY: -8, sizePx: 660, sizeVh: 0, opacity: 1 },
+    moonStyle: 'particle',
   },
   {
     id: 'detail-labels',
