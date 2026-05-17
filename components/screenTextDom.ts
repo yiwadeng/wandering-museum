@@ -23,7 +23,7 @@ export function buildTextBlockTransform(
     return `translate(calc(-50% + ${offsetX}px), calc(${offsetY}px + ${y})) scale(${scale})`;
   }
   if (placement === 'model-right') {
-    return `translate(${offsetX}px, calc(-50% + ${offsetY}px + ${y})) scale(${scale})`;
+    return `translate(0, calc(${offsetY}px + ${y})) scale(${scale})`;
   }
-  return `translate(${offsetX}px, calc(-50% + ${offsetY}px + ${y})) scale(${scale})`;
+  return `translate(0, calc(${offsetY}px + ${y})) scale(${scale})`;
 }

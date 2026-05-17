@@ -75,7 +75,7 @@ const atEaseDesktop: ScreenModelState = {
 };
 
 const introText: ScreenText = {
-  placement: 'below-model',
+  placement: 'model-right',
   title: '辽代彩绘木雕水月观音造像',
   lines: [
     '【年代】辽(907-1125)- 金(1115-1234)',

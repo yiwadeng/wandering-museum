@@ -51,32 +51,49 @@ function blockShellStyle(
   if (placement === 'model-right') {
     return {
       ...base,
-      right: '1rem',
-      top: '50%',
-      transformOrigin: '100% 50%',
-      maxWidth: 'min(42vw, 22rem)',
+      position: 'absolute',
+      right: '6vw',
+      top: '28vh',
+      transformOrigin: '100% 0%',
+      maxWidth: '26vw',
+      textAlign: 'left',
     };
   }
   return {
     ...base,
-    left: '1rem',
-    top: '50%',
-    transformOrigin: '0% 50%',
-    maxWidth: 'min(42vw, 22rem)',
+    left: '6vw',
+    top: '28vh',
+    transformOrigin: '0% 0%',
+    maxWidth: '30vw',
+    textAlign: 'left',
   };
 }
 
 function IntroTextBlock({ text }: { text: ScreenText }) {
   return (
     <>
-      <h1 style={{ ...TYPE.title, margin: '0 0 0.75rem' }}>{text.title}</h1>
-      {text.lines?.map((line, i) => (
-        <p key={i} style={{ ...TYPE.meta, margin: '0 0 0.25rem' }}>
-          {line}
-        </p>
-      ))}
+      <h1
+        style={{
+          fontSize: 30,
+          fontWeight: 600,
+          letterSpacing: '0.04em',
+          color: 'rgba(255, 250, 240, 0.95)',
+          margin: '0 0 22px',
+        }}
+      >
+        {text.title}
+      </h1>
+      {text.lines ? (
+        <div style={{ marginBottom: 18 }}>
+          {text.lines.map((line, i) => (
+            <p key={i} style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.62)', lineHeight: 1.75, margin: 0 }}>
+              {line}
+            </p>
+          ))}
+        </div>
+      ) : null}
       {text.body ? (
-        <p style={{ ...TYPE.body, margin: '0.75rem 0 0' }}>{text.body}</p>
+        <p style={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.78)', lineHeight: 1.85, margin: 0 }}>{text.body}</p>
       ) : null}
       {text.carouselPlaceholder ? (
         <p style={{ ...TYPE.meta, marginTop: '1.5rem', opacity: 0.7 }}>{text.carouselPlaceholder}</p>
